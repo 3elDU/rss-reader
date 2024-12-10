@@ -106,7 +106,7 @@ class _LoginPageState extends State<LoginPage> {
                     ]),
                     Align(
                       alignment: Alignment.bottomRight,
-                      child: Consumer<AuthProvider>(
+                      child: Consumer<AuthService>(
                         builder: (context, auth, _) => LoginButton(
                           disabled: _loginButtonDisabled,
                           onPressed: () {
@@ -143,11 +143,7 @@ class LoginButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ElevatedButton(
-      style: ElevatedButton.styleFrom(
-        backgroundColor: Theme.of(context).colorScheme.primary,
-        foregroundColor: Theme.of(context).colorScheme.onPrimary,
-      ),
+    return FilledButton(
       onPressed: disabled ? null : onPressed,
       child: const Text('Log in'),
     );

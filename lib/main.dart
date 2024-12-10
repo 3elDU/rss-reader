@@ -5,15 +5,25 @@ import 'package:rss_reader/pages/login.dart';
 import 'package:rss_reader/pages/read_later.dart';
 import 'package:rss_reader/pages/subscriptions.dart';
 import 'package:rss_reader/services/auth.dart';
+import 'package:rss_reader/services/feed.dart';
 
-void main() {
-  runApp(const MyApp());
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+
+  // Initialize authentication service early
+  final auth = AuthService();
+  await auth.initialize();
+
+  runApp(MyApp(auth));
 }
 
 final GlobalKey<ScaffoldMessengerState> scaffoldMessengerKey = GlobalKey();
 
 class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+  // Auth service is initialized earlier
+  final AuthService _auth;
+
+  const MyApp(this._auth, {super.key});
 
   // This widget is the root of your application.
   @override
@@ -26,14 +36,23 @@ class MyApp extends StatelessWidget {
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.orange),
         useMaterial3: true,
       ),
+      darkTheme: ThemeData(
+        colorScheme: ColorScheme.fromSeed(
+          seedColor: Colors.orange,
+          brightness: Brightness.dark,
+        ),
+      ),
       scaffoldMessengerKey: scaffoldMessengerKey,
       home: MultiProvider(
         providers: [
-          ChangeNotifierProvider(
-            create: (_) => AuthProvider()..initialize(),
+          ChangeNotifierProvider.value(
+            value: _auth,
+          ),
+          ProxyProvider<AuthService, FeedService>(
+            update: (_, auth, __) => FeedService(auth),
           ),
         ],
-        child: Consumer<AuthProvider>(
+        child: Consumer<AuthService>(
           builder: (_, auth, __) =>
               auth.isAuthenticated ? IndexPage() : const LoginPage(),
         ),
