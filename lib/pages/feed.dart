@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:rss_reader/providers/article_list.dart';
 import 'package:rss_reader/widgets/article.dart';
 import 'package:rss_reader/models/article.dart';
 import 'package:rss_reader/services/feed.dart';
@@ -28,7 +29,7 @@ class _FeedPageState extends State<FeedPage> {
         future: _articlesFuture,
         builder: (context, snapshot) {
           if (snapshot.hasError) {
-            return RetriableErrorInfo(
+            return RetriableErrorScreen(
               description: 'Error while fetching articles!',
               error: snapshot.error!,
               onPressRetry: () {
@@ -40,16 +41,21 @@ class _FeedPageState extends State<FeedPage> {
             );
           }
 
-          if (!snapshot.hasData) {
+          if (snapshot.connectionState == ConnectionState.done) {
+            return ChangeNotifierProvider(
+              create: (_) => ArticleListModel(snapshot.data!),
+              child: Consumer<ArticleListModel>(
+                builder: (_, model, __) => ListView.separated(
+                  padding: const EdgeInsets.all(16),
+                  itemCount: model.items.length,
+                  itemBuilder: (_, index) => ArticleCard(model.items[index]),
+                  separatorBuilder: (_, __) => const SizedBox(height: 10),
+                ),
+              ),
+            );
+          } else {
             return const Center(child: CircularProgressIndicator());
           }
-
-          return ListView.separated(
-            padding: const EdgeInsets.all(16),
-            itemCount: snapshot.data!.length,
-            itemBuilder: (_, index) => ArticleCard(snapshot.data![index]),
-            separatorBuilder: (_, __) => const SizedBox(height: 10),
-          );
         },
       ),
     );

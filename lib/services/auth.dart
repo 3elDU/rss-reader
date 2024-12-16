@@ -44,6 +44,10 @@ class AuthService extends ChangeNotifier {
       await _prefs.setBool('loggedIn', true);
       await _prefs.setString('token', token);
 
+      _baseUrl = baseUrl;
+      _token = token;
+      _isAuthenticated = true;
+
       // Inform the user that the login was successful
       scaffoldMessengerKey.currentState?.showSnackBar(SnackBar(
         content: Text.rich(TextSpan(children: [

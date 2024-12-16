@@ -17,13 +17,22 @@ class ApiClient {
     );
   }
 
-  Future<http.Response> post(String path, Object? body) async {
+  Future<http.Response> post(String path, {Object? body}) async {
     return http.post(
       baseUrl.replace(path: path),
       headers: {
         'Authorization': 'Bearer $token',
       },
       body: body,
+    );
+  }
+
+  Future<http.Response> delete(String path) async {
+    return http.delete(
+      baseUrl.replace(path: path),
+      headers: {
+        'Authorization': 'Bearer $token',
+      },
     );
   }
 }

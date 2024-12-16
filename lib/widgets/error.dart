@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-class RetriableErrorInfo extends StatelessWidget {
+class RetriableErrorScreen extends StatelessWidget {
   // Description of what failed
   final String description;
   // The error object itself
@@ -9,7 +9,7 @@ class RetriableErrorInfo extends StatelessWidget {
   final VoidCallback? onPressRetry;
   final String? retryText;
 
-  const RetriableErrorInfo({
+  const RetriableErrorScreen({
     required this.description,
     required this.error,
     this.onPressRetry,

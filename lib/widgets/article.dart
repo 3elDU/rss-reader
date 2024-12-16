@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:provider/provider.dart';
 import 'package:rss_reader/main.dart';
 import 'package:rss_reader/models/article.dart';
+import 'package:rss_reader/providers/article_list.dart';
+import 'package:rss_reader/services/feed.dart';
 import 'package:timeago/timeago.dart' as timeago;
 import 'package:url_launcher/url_launcher.dart';
 
@@ -46,11 +49,6 @@ class ArticleCard extends StatelessWidget {
         ),
       ));
     }
-  }
-
-  Future<void> _addToReadLater() async {
-    // FIXME: implement add to read later
-    throw UnimplementedError();
   }
 
   @override
@@ -107,10 +105,7 @@ class ArticleCard extends StatelessWidget {
                 Row(
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
-                    IconButton(
-                      icon: const Icon(Icons.access_time),
-                      onPressed: _addToReadLater,
-                    ),
+                    AddToReadLaterButton(article),
                     FilledButton(
                       onPressed: _openInBrowser,
                       child: Text(article.video == true ? 'Watch' : 'Read'),
@@ -216,6 +211,53 @@ class ThumbnailViewer extends StatelessWidget {
           ),
         ),
       ),
+    );
+  }
+}
+
+class AddToReadLaterButton extends StatefulWidget {
+  final Article article;
+
+  const AddToReadLaterButton(this.article, {super.key});
+
+  @override
+  State<AddToReadLaterButton> createState() => _AddToReadLaterButtonState();
+}
+
+class _AddToReadLaterButtonState extends State<AddToReadLaterButton> {
+  Future<void>? _toggleReadLaterFuture;
+
+  @override
+  Widget build(BuildContext context) {
+    return FutureBuilder(
+      future: _toggleReadLaterFuture,
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Padding(
+            padding: EdgeInsets.all(12),
+            child: SizedBox(
+              width: 24,
+              height: 24,
+              child: CircularProgressIndicator(),
+            ),
+          );
+        }
+
+        return IconButton(
+          icon: widget.article.readLater
+              ? const Icon(Icons.check)
+              : const Icon(Icons.schedule),
+          onPressed: () {
+            final api = context.read<FeedService>().api;
+
+            setState(() {
+              _toggleReadLaterFuture = context
+                  .read<ArticleListModel>()
+                  .toggleReadLater(api, widget.article.id);
+            });
+          },
+        );
+      },
     );
   }
 }

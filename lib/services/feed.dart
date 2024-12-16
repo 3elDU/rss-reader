@@ -16,4 +16,12 @@ class FeedService {
         .map((article) => Article.fromJson(article))
         .toList();
   }
+
+  /// Fetches the read later list
+  Future<List<Article>> readLater() async {
+    final response = await api.get('/readlater');
+    return (jsonDecode(response.body) as List<dynamic>)
+        .map((article) => Article.fromJson(article))
+        .toList();
+  }
 }
