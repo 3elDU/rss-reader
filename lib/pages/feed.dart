@@ -1,10 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:rss_reader/providers/article_list.dart';
-import 'package:rss_reader/widgets/article.dart';
 import 'package:rss_reader/models/article.dart';
 import 'package:rss_reader/services/feed.dart';
-import 'package:rss_reader/widgets/error.dart';
+import 'package:rss_reader/widgets/article/list.dart';
 
 class FeedPage extends StatefulWidget {
   const FeedPage({super.key});
@@ -22,41 +20,20 @@ class _FeedPageState extends State<FeedPage> {
     _articlesFuture = context.read<FeedService>().unreadArticles();
   }
 
+  Future<void> _refresh() {
+    final future = context.read<FeedService>().unreadArticles();
+    setState(() {
+      _articlesFuture = future;
+    });
+    return future;
+  }
+
   @override
   Widget build(BuildContext context) {
     return SafeArea(
-      child: FutureBuilder(
+      child: ArticleList(
         future: _articlesFuture,
-        builder: (context, snapshot) {
-          if (snapshot.hasError) {
-            return RetriableErrorScreen(
-              description: 'Error while fetching articles!',
-              error: snapshot.error!,
-              onPressRetry: () {
-                setState(() {
-                  _articlesFuture =
-                      context.read<FeedService>().unreadArticles();
-                });
-              },
-            );
-          }
-
-          if (snapshot.connectionState == ConnectionState.done) {
-            return ChangeNotifierProvider(
-              create: (_) => ArticleListModel(snapshot.data!),
-              child: Consumer<ArticleListModel>(
-                builder: (_, model, __) => ListView.separated(
-                  padding: const EdgeInsets.all(16),
-                  itemCount: model.items.length,
-                  itemBuilder: (_, index) => ArticleCard(model.items[index]),
-                  separatorBuilder: (_, __) => const SizedBox(height: 10),
-                ),
-              ),
-            );
-          } else {
-            return const Center(child: CircularProgressIndicator());
-          }
-        },
+        onRefresh: _refresh,
       ),
     );
   }
