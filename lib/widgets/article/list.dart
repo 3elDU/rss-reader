@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:rss_reader/models/article.dart';
 import 'package:rss_reader/providers/article_list.dart';
+import 'package:rss_reader/services/feed.dart';
 import 'package:rss_reader/widgets/article/card.dart';
 import 'package:rss_reader/widgets/error.dart';
 
@@ -30,8 +31,11 @@ class ArticleList extends StatelessWidget {
         }
 
         if (snapshot.connectionState == ConnectionState.done) {
-          return ChangeNotifierProvider(
-            create: (_) => ArticleListModel(snapshot.data!),
+          return ChangeNotifierProvider<ArticleListModel>(
+            create: (context) => ArticleListModel(
+              api: Provider.of<FeedService>(context, listen: false).api,
+              articles: snapshot.data!,
+            ),
             child: RefreshIndicator(
               onRefresh: onRefresh,
               child: Consumer<ArticleListModel>(

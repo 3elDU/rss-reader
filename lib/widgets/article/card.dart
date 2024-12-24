@@ -5,7 +5,6 @@ import 'package:provider/provider.dart';
 import 'package:rss_reader/main.dart';
 import 'package:rss_reader/models/article.dart';
 import 'package:rss_reader/providers/article_list.dart';
-import 'package:rss_reader/services/feed.dart';
 import 'package:timeago/timeago.dart' as timeago;
 import 'package:url_launcher/url_launcher.dart';
 
@@ -36,7 +35,8 @@ class ArticleCard extends StatelessWidget {
     );
   }
 
-  Future<void> _openInBrowser() async {
+  /// [ArticleListModel] is required to mark article as read
+  Future<void> _openInBrowser(ArticleListModel articleList) async {
     if (!(await launchUrl(
       article.url,
       mode: LaunchMode.externalApplication,
@@ -49,10 +49,14 @@ class ArticleCard extends StatelessWidget {
         ),
       ));
     }
+
+    await articleList.markAsRead(article.id);
   }
 
   @override
   Widget build(BuildContext context) {
+    final articleList = context.read<ArticleListModel>();
+
     return Card.filled(
       margin: EdgeInsets.zero,
       child: Padding(
@@ -107,7 +111,7 @@ class ArticleCard extends StatelessWidget {
                   children: [
                     AddToReadLaterButton(article),
                     FilledButton(
-                      onPressed: _openInBrowser,
+                      onPressed: () => _openInBrowser(articleList),
                       child: Text(article.video == true ? 'Watch' : 'Read'),
                     )
                   ],
@@ -248,12 +252,10 @@ class _AddToReadLaterButtonState extends State<AddToReadLaterButton> {
               ? const Icon(Icons.check)
               : const Icon(Icons.schedule),
           onPressed: () {
-            final api = context.read<FeedService>().api;
-
             setState(() {
               _toggleReadLaterFuture = context
                   .read<ArticleListModel>()
-                  .toggleReadLater(api, widget.article.id);
+                  .toggleReadLater(widget.article.id);
             });
           },
         );

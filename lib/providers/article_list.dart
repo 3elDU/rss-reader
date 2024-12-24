@@ -7,19 +7,28 @@ import 'package:rss_reader/util/api.dart';
 /// Provides a modifiable list of articles.
 class ArticleListModel extends ChangeNotifier {
   final List<Article> _articles;
+  final ApiClient api;
 
   UnmodifiableListView<Article> get items => UnmodifiableListView(_articles);
 
-  ArticleListModel(
+  ArticleListModel({
     /// Provide an initial list of articles
-    this._articles,
-  );
+    required List<Article> articles,
+    required this.api,
+  }) : _articles = articles;
+
+  Article getArticleById(int id) {
+    return _articles.firstWhere((article) => article.id == id);
+  }
 
   /// Add or remove the article from the read later list.
-  Future<void> toggleReadLater(ApiClient api, int id) async {
-    await _articles
-        .firstWhere((article) => article.id == id)
-        .toggleReadLater(api);
+  Future<void> toggleReadLater(int id) async {
+    await getArticleById(id).toggleReadLater(api);
+    notifyListeners();
+  }
+
+  Future<void> markAsRead(int id) async {
+    await getArticleById(id).markAsRead(api);
     notifyListeners();
   }
 }

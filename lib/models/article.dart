@@ -17,7 +17,7 @@ class Article {
   final String? description;
   final Uri url;
   @JsonKey(name: 'new')
-  final bool unread;
+  bool unread;
   final Uri? thumbnail;
   final DateTime created;
   bool readLater;
@@ -48,6 +48,11 @@ class Article {
       await api.post('/articles/$id/readlater');
     }
     readLater = !readLater;
+  }
+
+  Future<void> markAsRead(ApiClient api) async {
+    await api.post('/articles/$id/markread');
+    unread = false;
   }
 
   factory Article.fromJson(Map<String, dynamic> json) =>
