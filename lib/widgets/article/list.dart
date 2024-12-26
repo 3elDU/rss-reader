@@ -24,7 +24,8 @@ class ArticleList extends StatelessWidget {
       builder: (context, snapshot) {
         if (snapshot.hasError) {
           return RetriableErrorScreen(
-            description: 'Error while fetching articles!',
+            heading: 'API Error',
+            description: 'There was an error while fetching articles.',
             error: snapshot.error!,
             onPressRetry: onRefresh,
           );

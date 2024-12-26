@@ -6,24 +6,54 @@ import 'package:rss_reader/pages/read_later.dart';
 import 'package:rss_reader/pages/subscriptions.dart';
 import 'package:rss_reader/services/auth.dart';
 import 'package:rss_reader/services/feed.dart';
+import 'package:rss_reader/widgets/error.dart';
+
+// Try to initialize the authentication service, and return the error object,
+// if there is an error
+Future<Object?> safeInitAuth(AuthService auth) async {
+  try {
+    await auth.initialize();
+  } catch (error) {
+    return error;
+  }
+
+  return null;
+}
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   // Initialize authentication service early
   final auth = AuthService();
-  await auth.initialize();
+  final authError = await safeInitAuth(auth);
 
-  runApp(MyApp(auth));
+  runApp(MyApp(
+    auth,
+    authError: authError,
+  ));
 }
 
 final GlobalKey<ScaffoldMessengerState> scaffoldMessengerKey = GlobalKey();
 
-class MyApp extends StatelessWidget {
+class MyApp extends StatefulWidget {
   // Auth service is initialized earlier
   final AuthService _auth;
+  final Object? authError;
 
-  const MyApp(this._auth, {super.key});
+  const MyApp(this._auth, {this.authError, super.key});
+
+  @override
+  State<MyApp> createState() => _MyAppState();
+}
+
+class _MyAppState extends State<MyApp> {
+  Object? _authError;
+
+  @override
+  void initState() {
+    super.initState();
+    _authError = widget.authError;
+  }
 
   // This widget is the root of your application.
   @override
@@ -43,20 +73,44 @@ class MyApp extends StatelessWidget {
         ),
       ),
       scaffoldMessengerKey: scaffoldMessengerKey,
-      home: MultiProvider(
-        providers: [
-          ChangeNotifierProvider.value(
-            value: _auth,
-          ),
-          ProxyProvider<AuthService, FeedService>(
-            update: (_, auth, __) => FeedService(auth),
-          ),
-        ],
-        child: Consumer<AuthService>(
-          builder: (_, auth, __) =>
-              auth.isAuthenticated ? IndexPage() : const LoginPage(),
-        ),
-      ),
+      home: _authError != null
+          ? Scaffold(
+              body: RetriableErrorScreen(
+                heading: 'API Error',
+                description:
+                    'There was an error communicating with the server. Most likely there is a problem with your internet connection, or the API is unreachable.',
+                error: _authError!,
+                onPressRetry: () async {
+                  final error = await safeInitAuth(widget._auth);
+                  setState(() {
+                    _authError = error;
+                  });
+                },
+                secondaryAction: FilledButton.tonal(
+                  child: const Text('Log out'),
+                  onPressed: () async {
+                    await widget._auth.logout();
+                    setState(() {
+                      _authError = null;
+                    });
+                  },
+                ),
+              ),
+            )
+          : MultiProvider(
+              providers: [
+                ChangeNotifierProvider.value(
+                  value: widget._auth,
+                ),
+                ProxyProvider<AuthService, FeedService>(
+                  update: (_, auth, __) => FeedService(auth),
+                ),
+              ],
+              child: Consumer<AuthService>(
+                builder: (_, auth, __) =>
+                    auth.isAuthenticated ? IndexPage() : const LoginPage(),
+              ),
+            ),
     );
   }
 }

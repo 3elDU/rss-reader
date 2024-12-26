@@ -1,21 +1,35 @@
 import 'package:flutter/material.dart';
 
-class RetriableErrorScreen extends StatelessWidget {
-  // Description of what failed
-  final String description;
+class RetriableErrorScreen extends StatefulWidget {
+  // Title of the error screen
+  final String heading;
+  // Optional description
+  final String? description;
   // The error object itself
   final Object error;
-  // Optionally the callback to be executed when the user presses the "Retry" button
+  // The callback to be executed when the user presses the "Retry" button
+  // In case of null, the retry button will be hidden.
   final VoidCallback? onPressRetry;
+  // Optional secondary action (e.g: Log out)
+  final Widget? secondaryAction;
   final String? retryText;
 
   const RetriableErrorScreen({
-    required this.description,
+    required this.heading,
     required this.error,
+    this.description,
     this.onPressRetry,
     this.retryText,
+    this.secondaryAction,
     super.key,
   });
+
+  @override
+  State<RetriableErrorScreen> createState() => _RetriableErrorScreenState();
+}
+
+class _RetriableErrorScreenState extends State<RetriableErrorScreen> {
+  bool _showException = false;
 
   @override
   Widget build(BuildContext context) {
@@ -26,20 +40,52 @@ class RetriableErrorScreen extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.center,
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
+            // Heading
             Text(
-              description,
+              widget.heading,
               style: Theme.of(context).textTheme.headlineMedium,
               textAlign: TextAlign.center,
             ),
-            Text(
-              error.toString(),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 16),
-            FilledButton(
-              onPressed: onPressRetry,
-              child: Text(retryText ?? 'Retry'),
-            )
+            const SizedBox(height: 12.0),
+            // Description
+            if (widget.description != null) ...[
+              Text(
+                widget.description!,
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 12.0),
+            ],
+            // Error itself
+            if (_showException) ...[
+              Text(
+                widget.error.toString(),
+                textAlign: TextAlign.center,
+                style: Theme.of(context).textTheme.bodyMedium!.copyWith(
+                      color: Theme.of(context).colorScheme.error,
+                    ),
+              ),
+              const SizedBox(height: 16),
+            ],
+            // Retry button
+            if (widget.onPressRetry != null)
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  FilledButton(
+                    onPressed: widget.onPressRetry,
+                    onLongPress: () {
+                      setState(() {
+                        _showException = !_showException;
+                      });
+                    },
+                    child: Text(widget.retryText ?? 'Retry'),
+                  ),
+                  if (widget.secondaryAction != null) ...[
+                    const SizedBox(width: 12.0),
+                    widget.secondaryAction!,
+                  ],
+                ],
+              )
           ],
         ),
       ),
