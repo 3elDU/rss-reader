@@ -23,10 +23,11 @@ class ArticleList extends StatelessWidget {
       future: future,
       builder: (context, snapshot) {
         if (snapshot.hasError) {
-          return RetriableErrorScreen(
+          return CustomizableErrorScreen(
             heading: 'API Error',
             description: 'There was an error while fetching articles.',
             error: snapshot.error!,
+            stackTrace: snapshot.stackTrace,
             onPressRetry: onRefresh,
           );
         }

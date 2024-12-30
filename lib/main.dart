@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:rss_reader/models/feed.dart';
+import 'package:rss_reader/pages/add_feed.dart';
 import 'package:rss_reader/pages/feed.dart';
 import 'package:rss_reader/pages/login.dart';
 import 'package:rss_reader/pages/read_later.dart';
@@ -75,7 +77,7 @@ class _MyAppState extends State<MyApp> {
       scaffoldMessengerKey: scaffoldMessengerKey,
       home: _authError != null
           ? Scaffold(
-              body: RetriableErrorScreen(
+              body: CustomizableErrorScreen(
                 heading: 'API Error',
                 description:
                     'There was an error communicating with the server. Most likely there is a problem with your internet connection, or the API is unreachable.',
@@ -163,6 +165,39 @@ class _IndexPageState extends State<IndexPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      floatingActionButton: FloatingActionButton(
+        tooltip: 'Add a new feed',
+        child: const Icon(Icons.add),
+        onPressed: () async {
+          final feedService = context.read<FeedService>();
+          final feed = await Navigator.push<Feed?>(
+            context,
+            MaterialPageRoute(
+              fullscreenDialog: true,
+              builder: (_) => AddNewFeedDialog(feedService),
+            ),
+          );
+
+          if (context.mounted && feed is Feed) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text.rich(
+                  TextSpan(
+                    children: [
+                      const TextSpan(text: 'Subscribed to '),
+                      TextSpan(
+                        text: feed.title,
+                        style: const TextStyle(fontWeight: FontWeight.bold),
+                      ),
+                      const TextSpan(text: '!'),
+                    ],
+                  ),
+                ),
+              ),
+            );
+          }
+        },
+      ),
       body: pageForDestination(),
       bottomNavigationBar: NavigationBar(
         destinations: widget.destinations,
