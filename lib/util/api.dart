@@ -47,12 +47,16 @@ class ApiClient {
       if (json is Map<String, dynamic> && json['error'] == true) {
         throw ApiException(json['message'] as String);
       }
+    } on FormatException {
+      // the body is not a valid json
     } catch (e) {
       rethrow;
     }
 
-    // At this point we can safely assume that the response is JSON
-    return jsonDecode(response.body);
+    if (response.statusCode != 204 && response.body != "") {
+      // At this point we can safely assume that the response is JSON
+      return jsonDecode(response.body);
+    }
   }
 
   Future<dynamic> get(String path, {Map<String, dynamic>? query}) async {

@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 import 'package:rss_reader/main.dart';
 import 'package:rss_reader/models/article.dart';
 import 'package:rss_reader/providers/article_list.dart';
+import 'package:rss_reader/widgets/error.dart';
 import 'package:timeago/timeago.dart' as timeago;
 import 'package:url_launcher/url_launcher.dart';
 
@@ -231,6 +232,14 @@ class AddToReadLaterButton extends StatefulWidget {
 class _AddToReadLaterButtonState extends State<AddToReadLaterButton> {
   Future<void>? _toggleReadLaterFuture;
 
+  void handleError(Object? error, StackTrace stackTrace) {
+    CustomizableErrorScreen(
+      heading: "API Error",
+      error: error!,
+      stackTrace: stackTrace,
+    ).showSnackbar(context);
+  }
+
   @override
   Widget build(BuildContext context) {
     return FutureBuilder(
@@ -255,7 +264,8 @@ class _AddToReadLaterButtonState extends State<AddToReadLaterButton> {
             setState(() {
               _toggleReadLaterFuture = context
                   .read<ArticleListModel>()
-                  .toggleReadLater(widget.article.id);
+                  .toggleReadLater(widget.article.id)
+                  .onError(handleError);
             });
           },
         );
