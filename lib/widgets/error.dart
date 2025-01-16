@@ -65,9 +65,9 @@ class _CustomizableErrorScreenState extends State<CustomizableErrorScreen> {
           _showException = !_showException;
         });
       },
-      child: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Center(
+      child: Center(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(16.0),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             crossAxisAlignment: CrossAxisAlignment.center,
@@ -97,15 +97,17 @@ class _CustomizableErrorScreenState extends State<CustomizableErrorScreen> {
                       ),
                 ),
                 const SizedBox(height: 16),
-                Text(
-                  widget.stackTrace.toString(),
-                  textAlign: TextAlign.start,
-                  style: Theme.of(context).textTheme.bodyMedium!.copyWith(
-                        color: Theme.of(context).colorScheme.error,
-                        fontFamily: 'monospace',
-                      ),
-                ),
-                const SizedBox(height: 16),
+                if (widget.stackTrace != null) ...[
+                  Text(
+                    widget.stackTrace.toString(),
+                    textAlign: TextAlign.start,
+                    style: Theme.of(context).textTheme.bodyMedium!.copyWith(
+                          color: Theme.of(context).colorScheme.error,
+                          fontFamily: 'monospace',
+                        ),
+                  ),
+                  const SizedBox(height: 16),
+                ],
               ],
               // Retry button
               if (widget.onPressRetry != null)
