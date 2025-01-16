@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:rss_reader/models/feed.dart';
 import 'package:rss_reader/pages/add_feed.dart';
@@ -198,7 +199,12 @@ class _IndexPageState extends State<IndexPage> {
           }
         },
       ),
-      body: pageForDestination(),
+      body: AnnotatedRegion(
+        value: Theme.of(context).brightness == Brightness.light
+            ? SystemUiOverlayStyle.dark
+            : SystemUiOverlayStyle.light,
+        child: pageForDestination(),
+      ),
       bottomNavigationBar: NavigationBar(
         destinations: widget.destinations,
         selectedIndex: _currentDestination,

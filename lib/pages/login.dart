@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:rss_reader/services/auth.dart';
 
@@ -38,93 +39,99 @@ class _LoginPageState extends State<LoginPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: SafeArea(
-        child: FutureBuilder(
-          future: _loginFuture,
-          builder: (context, snapshot) {
-            String? urlError;
-            if (snapshot.hasError) {
-              urlError =
-                  'Connection error: ${snapshot.error.runtimeType.toString()}';
-            } else if (_urlController.text.startsWith('http:') ||
-                _urlController.text.startsWith('https:')) {
-              urlError = 'Do not prefix the base URL with http or https';
-            }
+      body: AnnotatedRegion<SystemUiOverlayStyle>(
+        value: Theme.of(context).brightness == Brightness.light
+            ? SystemUiOverlayStyle.dark
+            : SystemUiOverlayStyle.light,
+        child: SafeArea(
+          child: FutureBuilder(
+            future: _loginFuture,
+            builder: (context, snapshot) {
+              String? urlError;
+              if (snapshot.hasError) {
+                urlError =
+                    'Connection error: ${snapshot.error.runtimeType.toString()}';
+              } else if (_urlController.text.startsWith('http:') ||
+                  _urlController.text.startsWith('https:')) {
+                urlError = 'Do not prefix the base URL with http or https';
+              }
 
-            final tokenError = snapshot.data == false ? 'Invalid token' : null;
+              final tokenError =
+                  snapshot.data == false ? 'Invalid token' : null;
 
-            return Center(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.all(16.0),
-                child: Column(
-                  children: [
-                    Text(
-                      'Log in',
-                      style: Theme.of(context).textTheme.displayLarge,
-                      textAlign: TextAlign.center,
-                    ),
-                    const SizedBox(height: 48),
-                    Tooltip(
-                      message:
-                          'The base URL for the api. Provide only the host, without http://, https:// or slashes, e.g. myapi.example.com',
-                      child: TextField(
-                        controller: _urlController,
-                        keyboardType: TextInputType.url,
+              return Center(
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Column(
+                    children: [
+                      Text(
+                        'Log in',
+                        style: Theme.of(context).textTheme.displayLarge,
+                        textAlign: TextAlign.center,
+                      ),
+                      const SizedBox(height: 48),
+                      Tooltip(
+                        message:
+                            'The base URL for the api. Provide only the host, without http://, https:// or slashes, e.g. myapi.example.com',
+                        child: TextField(
+                          controller: _urlController,
+                          keyboardType: TextInputType.url,
+                          decoration: InputDecoration(
+                            labelText: 'Instance base URL',
+                            hintStyle:
+                                const TextStyle(fontWeight: FontWeight.w400),
+                            border: const OutlineInputBorder(),
+                            errorText: urlError,
+                          ),
+                          onChanged: _toggleLoginButton,
+                        ),
+                      ),
+                      const SizedBox(height: 24),
+                      TextField(
+                        controller: _tokenController,
+                        keyboardType: TextInputType.visiblePassword,
                         decoration: InputDecoration(
-                          labelText: 'Instance base URL',
-                          hintStyle:
-                              const TextStyle(fontWeight: FontWeight.w400),
+                          labelText: 'Token',
                           border: const OutlineInputBorder(),
-                          errorText: urlError,
+                          errorText: tokenError,
                         ),
                         onChanged: _toggleLoginButton,
                       ),
-                    ),
-                    const SizedBox(height: 24),
-                    TextField(
-                      controller: _tokenController,
-                      keyboardType: TextInputType.visiblePassword,
-                      decoration: InputDecoration(
-                        labelText: 'Token',
-                        border: const OutlineInputBorder(),
-                        errorText: tokenError,
-                      ),
-                      onChanged: _toggleLoginButton,
-                    ),
-                    const SizedBox(height: 12),
-                    Row(children: [
-                      Switch(
-                        value: _https,
-                        onChanged: (value) {
-                          setState(() {
-                            _https = value;
-                          });
-                        },
-                      ),
-                      const SizedBox(width: 16),
-                      const Text('Use HTTPS'),
-                    ]),
-                    Align(
-                      alignment: Alignment.bottomRight,
-                      child: Consumer<AuthService>(
-                        builder: (context, auth, _) => LoginButton(
-                          disabled: _loginButtonDisabled,
-                          onPressed: () {
+                      const SizedBox(height: 12),
+                      Row(children: [
+                        Switch(
+                          value: _https,
+                          onChanged: (value) {
                             setState(() {
-                              _loginFuture = auth.login(
-                                _baseUrl(),
-                                _tokenController.text,
-                              );
+                              _https = value;
                             });
                           },
                         ),
+                        const SizedBox(width: 16),
+                        const Text('Use HTTPS'),
+                      ]),
+                      Align(
+                        alignment: Alignment.bottomRight,
+                        child: Consumer<AuthService>(
+                          builder: (context, auth, _) => LoginButton(
+                            disabled: _loginButtonDisabled,
+                            onPressed: () {
+                              setState(() {
+                                _loginFuture = auth.login(
+                                  _baseUrl(),
+                                  _tokenController.text,
+                                );
+                              });
+                            },
+                          ),
+                        ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
-              ),
-            );
-          },
+              );
+            },
+          ),
         ),
       ),
     );
