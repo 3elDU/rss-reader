@@ -20,6 +20,8 @@ class _AddNewFeedDialogState extends State<AddNewFeedDialog> {
   Future<dynamic>? _requestFuture;
 
   void animateToFirstPage() {
+    // Unfocus the possibly active input element to hide the on-screen keyboard
+    FocusManager.instance.primaryFocus?.unfocus();
     _pageController.animateToPage(
       0,
       duration: Durations.medium2,
@@ -28,6 +30,7 @@ class _AddNewFeedDialogState extends State<AddNewFeedDialog> {
   }
 
   void animateToSecondPage() {
+    FocusManager.instance.primaryFocus?.unfocus();
     _pageController.animateToPage(
       1,
       duration: Durations.medium2,

@@ -1,5 +1,3 @@
-import 'dart:convert';
-
 import 'package:rss_reader/models/article.dart';
 import 'package:rss_reader/models/feed.dart';
 import 'package:rss_reader/services/auth.dart';
@@ -47,11 +45,11 @@ class FeedService {
   }) async {
     final response = await api.post(
       '/subscribe',
-      body: jsonEncode({
+      body: {
         'url': url,
         'title': title,
         'description': description,
-      }),
+      },
     );
     return Feed.fromJson(response);
   }
