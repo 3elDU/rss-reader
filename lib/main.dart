@@ -30,10 +30,7 @@ void main() async {
   final auth = AuthService();
   final authError = await safeInitAuth(auth);
 
-  runApp(MyApp(
-    auth,
-    authError: authError,
-  ));
+  runApp(MyApp(auth, authError: authError));
 }
 
 final GlobalKey<ScaffoldMessengerState> scaffoldMessengerKey = GlobalKey();
@@ -61,23 +58,19 @@ class _MyAppState extends State<MyApp> {
   // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Flutter Demo',
-      debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        // TODO: use system's primary color with 'dynamic_color' package
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.orange),
-        useMaterial3: true,
-      ),
-      darkTheme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(
-          seedColor: Colors.orange,
-          brightness: Brightness.dark,
+    return MultiProvider(
+      providers: [
+        ChangeNotifierProvider.value(value: widget._auth),
+        ProxyProvider<AuthService, FeedService>(
+          update: (_, auth, __) => FeedService(auth),
         ),
-      ),
-      scaffoldMessengerKey: scaffoldMessengerKey,
-      home: _authError != null
-          ? Scaffold(
+      ],
+      child: Consumer<AuthService>(
+        builder: (_, auth, __) {
+          Widget page;
+
+          if (_authError != null) {
+            page = Scaffold(
               body: CustomizableErrorScreen(
                 heading: 'API Error',
                 description:
@@ -99,43 +92,51 @@ class _MyAppState extends State<MyApp> {
                   },
                 ),
               ),
-            )
-          : MultiProvider(
-              providers: [
-                ChangeNotifierProvider.value(
-                  value: widget._auth,
-                ),
-                ProxyProvider<AuthService, FeedService>(
-                  update: (_, auth, __) => FeedService(auth),
-                ),
-              ],
-              child: Consumer<AuthService>(
-                builder: (_, auth, __) =>
-                    auth.isAuthenticated ? IndexPage() : const LoginPage(),
+            );
+          }
+
+          if (auth.isAuthenticated) {
+            page = const IndexPage();
+          } else {
+            page = const LoginPage();
+          }
+
+          return MaterialApp(
+            title: 'Flutter Demo',
+            debugShowCheckedModeBanner: false,
+            theme: ThemeData(
+              // TODO: use system's primary color with 'dynamic_color' package
+              colorScheme: ColorScheme.fromSeed(seedColor: Colors.orange),
+              useMaterial3: true,
+            ),
+            darkTheme: ThemeData(
+              colorScheme: ColorScheme.fromSeed(
+                seedColor: Colors.orange,
+                brightness: Brightness.dark,
               ),
             ),
+            scaffoldMessengerKey: scaffoldMessengerKey,
+            home: page,
+          );
+        },
+      ),
     );
   }
 }
 
 class IndexPage extends StatefulWidget {
-  IndexPage({super.key});
+  const IndexPage({super.key});
 
-  final List<NavigationDestination> destinations = <NavigationDestination>[
-    const NavigationDestination(
-      icon: Icon(Icons.inbox),
-      label: "Feed",
-    ),
-    const NavigationDestination(
-      icon: Icon(Icons.watch_later_outlined),
-      selectedIcon: Icon(Icons.watch_later),
-      label: "Read later",
-    ),
-    const NavigationDestination(
-      icon: Icon(Icons.list),
-      label: "Subscriptions",
-    ),
-  ];
+  final List<NavigationDestination> destinations =
+      const <NavigationDestination>[
+        NavigationDestination(icon: Icon(Icons.inbox), label: "Feed"),
+        NavigationDestination(
+          icon: Icon(Icons.watch_later_outlined),
+          selectedIcon: Icon(Icons.watch_later),
+          label: "Read later",
+        ),
+        NavigationDestination(icon: Icon(Icons.list), label: "Subscriptions"),
+      ];
 
   @override
   State<IndexPage> createState() => _IndexPageState();
@@ -165,50 +166,51 @@ class _IndexPageState extends State<IndexPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      floatingActionButton: FloatingActionButton(
-        tooltip: 'Add a new feed',
-        child: const Icon(Icons.add),
-        onPressed: () async {
-          final feedService = context.read<FeedService>();
-          final feed = await Navigator.push<Feed?>(
-            context,
-            MaterialPageRoute(
-              fullscreenDialog: true,
-              builder: (_) => AddNewFeedDialog(feedService),
-            ),
-          );
-
-          if (context.mounted && feed is Feed) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text.rich(
-                  TextSpan(
-                    children: [
-                      const TextSpan(text: 'Subscribed to '),
-                      TextSpan(
-                        text: feed.title,
-                        style: const TextStyle(fontWeight: FontWeight.bold),
-                      ),
-                      const TextSpan(text: '!'),
-                    ],
-                  ),
-                ),
+    return AnnotatedRegion(
+      value:
+          Theme.of(context).brightness == Brightness.light
+              ? SystemUiOverlayStyle.dark
+              : SystemUiOverlayStyle.light,
+      child: Scaffold(
+        floatingActionButton: FloatingActionButton(
+          tooltip: 'Add a new feed',
+          child: const Icon(Icons.add),
+          onPressed: () async {
+            final feedService = context.read<FeedService>();
+            final feed = await Navigator.push<Feed?>(
+              context,
+              MaterialPageRoute(
+                fullscreenDialog: true,
+                builder: (_) => AddNewFeedDialog(feedService),
               ),
             );
-          }
-        },
-      ),
-      body: AnnotatedRegion(
-        value: Theme.of(context).brightness == Brightness.light
-            ? SystemUiOverlayStyle.dark
-            : SystemUiOverlayStyle.light,
-        child: pageForDestination(),
-      ),
-      bottomNavigationBar: NavigationBar(
-        destinations: widget.destinations,
-        selectedIndex: _currentDestination,
-        onDestinationSelected: selectDestination,
+
+            if (context.mounted && feed is Feed) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text.rich(
+                    TextSpan(
+                      children: [
+                        const TextSpan(text: 'Subscribed to '),
+                        TextSpan(
+                          text: feed.title,
+                          style: const TextStyle(fontWeight: FontWeight.bold),
+                        ),
+                        const TextSpan(text: '!'),
+                      ],
+                    ),
+                  ),
+                ),
+              );
+            }
+          },
+        ),
+        body: pageForDestination(),
+        bottomNavigationBar: NavigationBar(
+          destinations: widget.destinations,
+          selectedIndex: _currentDestination,
+          onDestinationSelected: selectDestination,
+        ),
       ),
     );
   }

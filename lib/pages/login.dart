@@ -40,9 +40,10 @@ class _LoginPageState extends State<LoginPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       body: AnnotatedRegion<SystemUiOverlayStyle>(
-        value: Theme.of(context).brightness == Brightness.light
-            ? SystemUiOverlayStyle.dark
-            : SystemUiOverlayStyle.light,
+        value:
+            Theme.of(context).brightness == Brightness.light
+                ? SystemUiOverlayStyle.dark
+                : SystemUiOverlayStyle.light,
         child: SafeArea(
           child: FutureBuilder(
             future: _loginFuture,
@@ -78,8 +79,9 @@ class _LoginPageState extends State<LoginPage> {
                           keyboardType: TextInputType.url,
                           decoration: InputDecoration(
                             labelText: 'Instance base URL',
-                            hintStyle:
-                                const TextStyle(fontWeight: FontWeight.w400),
+                            hintStyle: const TextStyle(
+                              fontWeight: FontWeight.w400,
+                            ),
                             border: const OutlineInputBorder(),
                             errorText: urlError,
                           ),
@@ -98,32 +100,35 @@ class _LoginPageState extends State<LoginPage> {
                         onChanged: _toggleLoginButton,
                       ),
                       const SizedBox(height: 12),
-                      Row(children: [
-                        Switch(
-                          value: _https,
-                          onChanged: (value) {
-                            setState(() {
-                              _https = value;
-                            });
-                          },
-                        ),
-                        const SizedBox(width: 16),
-                        const Text('Use HTTPS'),
-                      ]),
-                      Align(
-                        alignment: Alignment.bottomRight,
-                        child: Consumer<AuthService>(
-                          builder: (context, auth, _) => LoginButton(
-                            disabled: _loginButtonDisabled,
-                            onPressed: () {
+                      Row(
+                        children: [
+                          Switch(
+                            value: _https,
+                            onChanged: (value) {
                               setState(() {
-                                _loginFuture = auth.login(
-                                  _baseUrl(),
-                                  _tokenController.text,
-                                );
+                                _https = value;
                               });
                             },
                           ),
+                          const SizedBox(width: 16),
+                          const Text('Use HTTPS'),
+                        ],
+                      ),
+                      Align(
+                        alignment: Alignment.bottomRight,
+                        child: Consumer<AuthService>(
+                          builder:
+                              (context, auth, _) => LoginButton(
+                                disabled: _loginButtonDisabled,
+                                onPressed: () {
+                                  setState(() {
+                                    _loginFuture = auth.login(
+                                      _baseUrl(),
+                                      _tokenController.text,
+                                    );
+                                  });
+                                },
+                              ),
                         ),
                       ),
                     ],

@@ -32,10 +32,7 @@ class _ReadLaterPageState extends State<ReadLaterPage> {
   @override
   Widget build(BuildContext context) {
     return SafeArea(
-      child: ArticleList(
-        future: _articlesFuture,
-        onRefresh: _refresh,
-      ),
+      child: ArticleList(future: _articlesFuture, onRefresh: _refresh),
     );
   }
 }

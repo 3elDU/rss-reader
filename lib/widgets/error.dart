@@ -29,24 +29,27 @@ class CustomizableErrorScreen extends StatefulWidget {
   /// Shows a snackbar with [heading] as text and 'Details' button
   /// that opens up a detailed error screen
   void showSnackbar(BuildContext context) {
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-      content: Text(heading),
-      action: SnackBarAction(
-        label: 'Details',
-        onPressed: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (_) => Scaffold(
-                appBar: AppBar(title: const Text('Error details')),
-                body: this,
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(heading),
+        action: SnackBarAction(
+          label: 'Details',
+          onPressed: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder:
+                    (_) => Scaffold(
+                      appBar: AppBar(title: const Text('Error details')),
+                      body: this,
+                    ),
+                fullscreenDialog: true,
               ),
-              fullscreenDialog: true,
-            ),
-          );
-        },
+            );
+          },
+        ),
       ),
-    ));
+    );
   }
 
   @override
@@ -81,10 +84,7 @@ class _CustomizableErrorScreenState extends State<CustomizableErrorScreen> {
               const SizedBox(height: 12.0),
               // Description
               if (widget.description != null) ...[
-                Text(
-                  widget.description!,
-                  textAlign: TextAlign.center,
-                ),
+                Text(widget.description!, textAlign: TextAlign.center),
                 const SizedBox(height: 12.0),
               ],
               // Error itself
@@ -93,8 +93,8 @@ class _CustomizableErrorScreenState extends State<CustomizableErrorScreen> {
                   '${widget.error.runtimeType}: ${widget.error.toString()}',
                   textAlign: TextAlign.center,
                   style: Theme.of(context).textTheme.bodyMedium!.copyWith(
-                        color: Theme.of(context).colorScheme.error,
-                      ),
+                    color: Theme.of(context).colorScheme.error,
+                  ),
                 ),
                 const SizedBox(height: 16),
                 if (widget.stackTrace != null) ...[
@@ -102,9 +102,9 @@ class _CustomizableErrorScreenState extends State<CustomizableErrorScreen> {
                     widget.stackTrace.toString(),
                     textAlign: TextAlign.start,
                     style: Theme.of(context).textTheme.bodyMedium!.copyWith(
-                          color: Theme.of(context).colorScheme.error,
-                          fontFamily: 'monospace',
-                        ),
+                      color: Theme.of(context).colorScheme.error,
+                      fontFamily: 'monospace',
+                    ),
                   ),
                   const SizedBox(height: 16),
                 ],
@@ -123,7 +123,7 @@ class _CustomizableErrorScreenState extends State<CustomizableErrorScreen> {
                       widget.secondaryAction!,
                     ],
                   ],
-                )
+                ),
             ],
           ),
         ),

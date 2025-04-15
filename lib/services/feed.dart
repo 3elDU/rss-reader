@@ -9,29 +9,31 @@ class FeedService {
 
   FeedService(AuthService auth) : api = ApiClient(auth.baseUrl!, auth.token!);
 
-  Future<List<Article>> unreadArticles() async {
-    final response = await api.get('/unread');
+  List<Article> _toArticleList(dynamic response) {
     return (response as List<dynamic>)
         .map((article) => Article.fromJson(article))
         .toList();
+  }
+
+  Future<List<Article>> articlesInSubscription(int subscriptionId) async {
+    final response = await api.get('/subscriptions/$subscriptionId/articles');
+    return _toArticleList(response);
+  }
+
+  Future<List<Article>> unreadArticles() async {
+    final response = await api.get('/unread');
+    return _toArticleList(response);
   }
 
   /// Fetches the read later list
   Future<List<Article>> readLater() async {
     final response = await api.get('/readlater');
-    return (response as List<dynamic>)
-        .map((article) => Article.fromJson(article))
-        .toList();
+    return _toArticleList(response);
   }
 
   /// Fetch metadata about the remote feed that has not yet been added to the database
   Future<Feed> fetchRemoteFeedInfo(String feedUrl) async {
-    final response = await api.get(
-      '/feedinfo',
-      query: {
-        'url': feedUrl,
-      },
-    );
+    final response = await api.get('/feedinfo', query: {'url': feedUrl});
     return Feed.fromJson(response);
   }
 
@@ -45,11 +47,7 @@ class FeedService {
   }) async {
     final response = await api.post(
       '/subscribe',
-      body: {
-        'url': url,
-        'title': title,
-        'description': description,
-      },
+      body: {'url': url, 'title': title, 'description': description},
     );
     return Feed.fromJson(response);
   }

@@ -37,9 +37,7 @@ class ApiClient {
     if (body != null) {
       request.body = body;
     }
-    final response = await http.Response.fromStream(
-      await request.send(),
-    );
+    final response = await http.Response.fromStream(await request.send());
 
     // Check for internal server errors
     try {

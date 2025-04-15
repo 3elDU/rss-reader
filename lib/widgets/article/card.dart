@@ -4,6 +4,7 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:provider/provider.dart';
 import 'package:rss_reader/main.dart';
 import 'package:rss_reader/models/article.dart';
+import 'package:rss_reader/pages/subscription.dart';
 import 'package:rss_reader/providers/article_list.dart';
 import 'package:rss_reader/widgets/error.dart';
 import 'package:timeago/timeago.dart' as timeago;
@@ -12,53 +13,58 @@ import 'package:url_launcher/url_launcher.dart';
 class ArticleCard extends StatelessWidget {
   final Article article;
 
-  const ArticleCard(this.article, {super.key});
+  /// Whether to enable the clickable header, that navigates to subscription
+  /// page
+  final bool clickableHeader;
+
+  const ArticleCard(this.article, {super.key, this.clickableHeader = true});
 
   Widget _buildTitle(BuildContext context) {
     return DefaultTextStyle.merge(
       style: Theme.of(context).textTheme.bodySmall!.copyWith(
-            color: Theme.of(context).colorScheme.onSurfaceVariant,
-          ),
-      child: Row(children: [
-        if (article.unread) const Badge(label: Text('New')),
-        if (article.unread) const SizedBox(width: 8.0),
-        Expanded(
-          child: Tooltip(
-            // TODO: format this to user's locale
-            message: article.created.toString(),
-            child: Text(
-              '${article.subscription!.title} • ${timeago.format(article.created)}',
-              overflow: TextOverflow.ellipsis,
+        color: Theme.of(context).colorScheme.onSurfaceVariant,
+      ),
+      child: Row(
+        children: [
+          if (article.unread) const Badge(label: Text('New')),
+          if (article.unread) const SizedBox(width: 8.0),
+          Expanded(
+            child: Tooltip(
+              // TODO: format this to user's locale
+              message: article.created.toString(),
+              child: Text(
+                '${article.subscription!.title} • ${timeago.format(article.created)}',
+                overflow: TextOverflow.ellipsis,
+              ),
             ),
           ),
-        )
-      ]),
+        ],
+      ),
     );
   }
 
   /// [ArticleListModel] is required to mark article as read
-  Future<void> _openInBrowser(ArticleListModel articleList) async {
-    if (!(await launchUrl(
-      article.url,
-      mode: LaunchMode.externalApplication,
-    ))) {
+  Future<void> _openInBrowser(BuildContext context) async {
+    if (!(await launchUrl(article.url, mode: LaunchMode.externalApplication))) {
       // If opening a web browser failed, copy article URL to the clipboard
       await Clipboard.setData(ClipboardData(text: article.url.toString()));
-      scaffoldMessengerKey.currentState!.showSnackBar(const SnackBar(
-        content: Text(
-          'Launching a Web browser failed. Article URL was copied to system clipboard!',
+      scaffoldMessengerKey.currentState!.showSnackBar(
+        const SnackBar(
+          content: Text(
+            'Launching a Web browser failed. Article URL was copied to system clipboard!',
+          ),
         ),
-      ));
+      );
     }
 
-    await articleList.markAsRead(article.id);
+    if (context.mounted) {
+      await context.read<ArticleListModel?>()?.markAsRead(article.id);
+    }
   }
 
   @override
   Widget build(BuildContext context) {
-    final articleList = context.read<ArticleListModel>();
-
-    return Card.filled(
+    final card = Card.filled(
       margin: EdgeInsets.zero,
       child: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -80,7 +86,7 @@ class ArticleCard extends StatelessWidget {
                         article.title,
                         maxLines: 3,
                         style: Theme.of(context).textTheme.titleMedium,
-                      )
+                      ),
                     ],
                   ),
                 ),
@@ -91,17 +97,16 @@ class ArticleCard extends StatelessWidget {
                 // Thumbnail
                 if (article.thumbnail != null) const SizedBox(height: 8.0),
                 if (article.thumbnail != null)
-                  Expanded(
-                    child: ArticleThumbnail(article.thumbnail!),
-                  ),
+                  Expanded(child: ArticleThumbnail(article.thumbnail!)),
               ],
             ),
             const SizedBox(height: 8.0),
             // Video indicator / actions
             Row(
-              mainAxisAlignment: (article.video == true)
-                  ? MainAxisAlignment.spaceBetween
-                  : MainAxisAlignment.end,
+              mainAxisAlignment:
+                  (article.video == true)
+                      ? MainAxisAlignment.spaceBetween
+                      : MainAxisAlignment.end,
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
                 if (article.video == true) const Icon(Icons.videocam),
@@ -112,17 +117,32 @@ class ArticleCard extends StatelessWidget {
                   children: [
                     AddToReadLaterButton(article),
                     FilledButton(
-                      onPressed: () => _openInBrowser(articleList),
+                      onPressed: () => _openInBrowser(context),
                       child: Text(article.video == true ? 'Watch' : 'Read'),
-                    )
+                    ),
                   ],
                 ),
               ],
-            )
+            ),
           ],
         ),
       ),
     );
+
+    if (clickableHeader) {
+      return GestureDetector(
+        onTap: () {
+          Navigator.of(context).push(
+            MaterialPageRoute(
+              builder: (context) => SubscriptionPage(article.subscription!),
+            ),
+          );
+        },
+        child: card,
+      );
+    } else {
+      return card;
+    }
   }
 }
 
@@ -134,9 +154,7 @@ class ArticleThumbnail extends StatelessWidget {
   void _previewThumbnail(BuildContext context) {
     Navigator.push<void>(
       context,
-      MaterialPageRoute(
-        builder: (_) => ThumbnailViewer(thumbnail),
-      ),
+      MaterialPageRoute(builder: (_) => ThumbnailViewer(thumbnail)),
     );
   }
 
@@ -144,10 +162,7 @@ class ArticleThumbnail extends StatelessWidget {
   Widget build(BuildContext context) {
     Widget image;
     if (thumbnail.path.endsWith('.svg')) {
-      image = SvgPicture.network(
-        thumbnail.toString(),
-        fit: BoxFit.cover,
-      );
+      image = SvgPicture.network(thumbnail.toString(), fit: BoxFit.cover);
     } else {
       image = Image.network(
         key: ValueKey(thumbnail),
@@ -158,16 +173,14 @@ class ArticleThumbnail extends StatelessWidget {
             // The image was fully loaded
             return GestureDetector(
               onTap: () => _previewThumbnail(context),
-              child: Hero(
-                tag: thumbnail,
-                child: child,
-              ),
+              child: Hero(tag: thumbnail, child: child),
             );
           }
 
           double? progress;
           if (loadingProgress.expectedTotalBytes != null) {
-            progress = loadingProgress.cumulativeBytesLoaded /
+            progress =
+                loadingProgress.cumulativeBytesLoaded /
                 loadingProgress.expectedTotalBytes!;
           }
 
@@ -185,10 +198,7 @@ class ArticleThumbnail extends StatelessWidget {
       aspectRatio: 1,
       child: ClipRRect(
         borderRadius: BorderRadius.circular(8.0),
-        child: Container(
-          color: Colors.black,
-          child: image,
-        ),
+        child: Container(child: image),
       ),
     );
   }
@@ -209,12 +219,7 @@ class ThumbnailViewer extends StatelessWidget {
       },
       child: InteractiveViewer(
         maxScale: 10,
-        child: Hero(
-          tag: url,
-          child: Image.network(
-            url.toString(),
-          ),
-        ),
+        child: Hero(tag: url, child: Image.network(url.toString())),
       ),
     );
   }
@@ -257,9 +262,10 @@ class _AddToReadLaterButtonState extends State<AddToReadLaterButton> {
         }
 
         return IconButton(
-          icon: widget.article.readLater
-              ? const Icon(Icons.check)
-              : const Icon(Icons.schedule),
+          icon:
+              widget.article.readLater
+                  ? const Icon(Icons.check)
+                  : const Icon(Icons.schedule),
           onPressed: () {
             setState(() {
               _toggleReadLaterFuture = context

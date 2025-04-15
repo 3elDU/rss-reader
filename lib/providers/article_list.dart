@@ -21,6 +21,13 @@ class ArticleListModel extends ChangeNotifier {
     return _articles.firstWhere((article) => article.id == id);
   }
 
+  /// Replace the list of articles with a new one.
+  void setArticles(List<Article> articles) {
+    _articles.clear();
+    _articles.addAll(articles);
+    notifyListeners();
+  }
+
   /// Add or remove the article from the read later list.
   Future<void> toggleReadLater(int id) async {
     await getArticleById(id).toggleReadLater(api);

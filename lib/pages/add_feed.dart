@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:rss_reader/models/feed.dart';
 import 'package:rss_reader/services/feed.dart';
 import 'package:rss_reader/widgets/error.dart';
+import 'package:rss_reader/widgets/subscription/thumbnail.dart';
 
 class AddNewFeedDialog extends StatefulWidget {
   final FeedService feedService;
@@ -48,11 +49,13 @@ class _AddNewFeedDialogState extends State<AddNewFeedDialog> {
 
       // If feed id is not zero in the response, this means that there is an existing feed with the same URL in the database
       if (feed.id != 0 && mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-          content: Text(
-            'A feed with the following URL already exists in the database',
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text(
+              'A feed with the following URL already exists in the database',
+            ),
           ),
-        ));
+        );
         return;
       }
 
@@ -107,23 +110,19 @@ class _AddNewFeedDialogState extends State<AddNewFeedDialog> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Add a new feed'),
-      ),
+      appBar: AppBar(title: const Text('Add a new feed')),
       body: FutureBuilder(
         future: _requestFuture,
         builder: (context, snapshot) {
-          final loading = _requestFuture != null &&
+          final loading =
+              _requestFuture != null &&
               snapshot.connectionState != ConnectionState.done;
 
           return PageView(
             controller: _pageController,
             physics: const NeverScrollableScrollPhysics(),
             children: [
-              _FirstPage(
-                onSubmitUrl: fetchFeedInfo,
-                loading: loading,
-              ),
+              _FirstPage(onSubmitUrl: fetchFeedInfo, loading: loading),
               if (_feed != null)
                 // Intercept the back button and navigate to first page when it is pressed
                 PopScope(
@@ -135,7 +134,7 @@ class _AddNewFeedDialogState extends State<AddNewFeedDialog> {
                     onSubmit: subscribe,
                     loading: loading,
                   ),
-                )
+                ),
             ],
           );
         },
@@ -161,10 +160,7 @@ class _FirstPageState extends State<_FirstPage> {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.symmetric(
-        horizontal: 24,
-        vertical: 16,
-      ),
+      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.end,
         mainAxisAlignment: MainAxisAlignment.center,
@@ -186,24 +182,25 @@ class _FirstPageState extends State<_FirstPage> {
               if (widget.loading) const CircularProgressIndicator(),
               const SizedBox(width: 8.0),
               FilledButton(
-                onPressed: widget.loading
-                    ? null
-                    : () {
-                        if (Uri.tryParse(_urlController.text) == null) {
-                          setState(() {
-                            _urlError = 'Invalid URL';
-                          });
-                        } else {
-                          setState(() {
-                            _urlError = null;
-                          });
-                          widget.onSubmitUrl(_urlController.text);
-                        }
-                      },
+                onPressed:
+                    widget.loading
+                        ? null
+                        : () {
+                          if (Uri.tryParse(_urlController.text) == null) {
+                            setState(() {
+                              _urlError = 'Invalid URL';
+                            });
+                          } else {
+                            setState(() {
+                              _urlError = null;
+                            });
+                            widget.onSubmitUrl(_urlController.text);
+                          }
+                        },
                 child: const Text('Continue'),
               ),
             ],
-          )
+          ),
         ],
       ),
     );
@@ -214,7 +211,7 @@ class _SecondPage extends StatefulWidget {
   final Feed feed;
   final void Function() onGoBack;
   final void Function(String url, {String? title, String? description})
-      onSubmit;
+  onSubmit;
   final bool loading;
 
   const _SecondPage(
@@ -237,28 +234,21 @@ class _SecondPageState extends State<_SecondPage> {
     super.initState();
     // Populate text fields with values from the feed
     _titleController = TextEditingController(text: widget.feed.title);
-    _descriptionController =
-        TextEditingController(text: widget.feed.description);
+    _descriptionController = TextEditingController(
+      text: widget.feed.description,
+    );
   }
 
   @override
   Widget build(BuildContext context) {
-    return Stack(children: [
-      SingleChildScrollView(
-        child: Column(children: [
-          // FIXME: show feed thumbnail if available (this should be first implemented on the backend)
-          Container(
-            constraints: const BoxConstraints.expand(height: 240),
-            color: Theme.of(context).colorScheme.surfaceContainerHighest,
-            alignment: Alignment.center,
-            child: const Icon(
-              size: 64,
-              Icons.hide_image_outlined,
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.all(24),
-            child: Column(children: [
+    return Stack(
+      children: [
+        SingleChildScrollView(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            spacing: 16,
+            children: [
+              SubscriptionThumbnail(widget.feed.thumbnail),
               TextField(
                 controller: TextEditingController(text: widget.feed.url),
                 enabled: false,
@@ -267,7 +257,6 @@ class _SecondPageState extends State<_SecondPage> {
                   labelText: 'Feed URL',
                 ),
               ),
-              const SizedBox(height: 16.0),
               TextField(
                 controller: _titleController,
                 decoration: const InputDecoration(
@@ -275,7 +264,6 @@ class _SecondPageState extends State<_SecondPage> {
                   labelText: 'Title',
                 ),
               ),
-              const SizedBox(height: 16.0),
               TextField(
                 controller: _descriptionController,
                 decoration: const InputDecoration(
@@ -283,7 +271,6 @@ class _SecondPageState extends State<_SecondPage> {
                   labelText: 'Description',
                 ),
               ),
-              const SizedBox(height: 16),
               Row(
                 children: [
                   FilledButton.tonalIcon(
@@ -299,20 +286,21 @@ class _SecondPageState extends State<_SecondPage> {
                   FilledButton.icon(
                     icon: const Icon(Icons.add),
                     label: const Text('Add feed'),
-                    onPressed: widget.loading
-                        ? null
-                        : () => widget.onSubmit(
+                    onPressed:
+                        widget.loading
+                            ? null
+                            : () => widget.onSubmit(
                               widget.feed.url!,
                               title: _titleController.text,
                               description: _descriptionController.text,
                             ),
                   ),
                 ],
-              )
-            ]),
+              ),
+            ],
           ),
-        ]),
-      ),
-    ]);
+        ),
+      ],
+    );
   }
 }

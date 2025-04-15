@@ -29,9 +29,7 @@ class AuthService extends ChangeNotifier {
   Future<bool> _checkToken(Uri baseUrl, String token) async {
     final response = await http.get(
       baseUrl.replace(path: '/ping'),
-      headers: {
-        'Authorization': 'Bearer $token',
-      },
+      headers: {'Authorization': 'Bearer $token'},
     );
     return response.body == 'pong';
   }
@@ -49,15 +47,21 @@ class AuthService extends ChangeNotifier {
       _isAuthenticated = true;
 
       // Inform the user that the login was successful
-      scaffoldMessengerKey.currentState?.showSnackBar(SnackBar(
-        content: Text.rich(TextSpan(children: [
-          const TextSpan(text: 'Logged in successfully at '),
-          TextSpan(
-            style: const TextStyle(fontWeight: FontWeight.bold),
-            text: this.baseUrl!.host,
-          )
-        ])),
-      ));
+      scaffoldMessengerKey.currentState?.showSnackBar(
+        SnackBar(
+          content: Text.rich(
+            TextSpan(
+              children: [
+                const TextSpan(text: 'Logged in successfully at '),
+                TextSpan(
+                  style: const TextStyle(fontWeight: FontWeight.bold),
+                  text: this.baseUrl!.host,
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
     }
 
     notifyListeners();
@@ -81,10 +85,7 @@ class AuthService extends ChangeNotifier {
     final token = await _prefs.getString('token');
     if (baseUrl == null || token == null) return false;
 
-    return await _checkToken(
-      Uri.parse(baseUrl),
-      token,
-    );
+    return await _checkToken(Uri.parse(baseUrl), token);
   }
 
   // Fetches the base url from SharedPreferences

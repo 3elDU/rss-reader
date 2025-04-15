@@ -31,10 +31,7 @@ class _FeedPageState extends State<FeedPage> {
   @override
   Widget build(BuildContext context) {
     return SafeArea(
-      child: ArticleList(
-        future: _articlesFuture,
-        onRefresh: _refresh,
-      ),
+      child: ArticleList(future: _articlesFuture, onRefresh: _refresh),
     );
   }
 }

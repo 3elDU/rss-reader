@@ -11,7 +11,7 @@ class Feed {
   final String? url;
   final String title;
   final String? description;
-  final Uri? thumbnail;
+  final String? thumbnail;
 
   const Feed({
     required this.id,
