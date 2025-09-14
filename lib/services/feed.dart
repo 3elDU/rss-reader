@@ -15,19 +15,25 @@ class FeedService {
         .toList();
   }
 
-  Future<List<Article>> articlesInSubscription(int subscriptionId) async {
-    final response = await api.get('/subscriptions/$subscriptionId/articles');
+  Future<List<Article>> articlesInSubscription(
+    int subscriptionId, {
+    int? page,
+  }) async {
+    final response = await api.get(
+      '/subscriptions/$subscriptionId/articles',
+      query: {'page': page},
+    );
     return _toArticleList(response);
   }
 
-  Future<List<Article>> unreadArticles() async {
-    final response = await api.get('/unread');
+  Future<List<Article>> unreadArticles({int? page}) async {
+    final response = await api.get('/unread', query: {'page': page});
     return _toArticleList(response);
   }
 
   /// Fetches the read later list
-  Future<List<Article>> readLater() async {
-    final response = await api.get('/readlater');
+  Future<List<Article>> readLater({int? page}) async {
+    final response = await api.get('/readlater', query: {'page': page});
     return _toArticleList(response);
   }
 
