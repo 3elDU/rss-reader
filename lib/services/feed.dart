@@ -1,40 +1,64 @@
 import 'package:rss_reader/models/article.dart';
 import 'package:rss_reader/models/feed.dart';
-import 'package:rss_reader/services/auth.dart';
-import 'package:rss_reader/util/api.dart';
 
 /// Allows fetching feeds from the backend
 class FeedService {
-  final ApiClient api;
+  FeedService();
 
-  FeedService(AuthService auth) : api = ApiClient(auth.baseUrl!, auth.token!);
+  final demoSubscription = Feed(id: 1, title: "Demo Subscription");
 
-  List<Article> _toArticleList(dynamic response) {
-    return (response as List<dynamic>)
-        .map((article) => Article.fromJson(article))
-        .toList();
-  }
+  late final demoArticles = <Article>[
+    Article(
+      id: 1,
+      subscriptionId: 1,
+      title: "First Article",
+      description: "This is an article about cats. Miau meow. I like cats.",
+      url: Uri.https('example.org', '/article1'),
+      unread: false,
+      created: DateTime(2025, 11, 21, 12),
+      readLater: false,
+      subscription: demoSubscription,
+    ),
+    Article(
+      id: 1,
+      subscriptionId: 1,
+      title: "Second Article",
+      description: "Lorem ipsum dolor sit amet asdasdasdasdasd.",
+      url: Uri.https('example.org', '/article2'),
+      unread: true,
+      created: DateTime(2025, 11, 21, 12),
+      readLater: true,
+      subscription: demoSubscription,
+    ),
+    Article(
+      id: 1,
+      subscriptionId: 1,
+      title: "Qwerty",
+      description: "Test",
+      url: Uri.https('example.org', '/article3'),
+      unread: true,
+      created: DateTime(2025, 11, 21, 12),
+      readLater: false,
+      subscription: demoSubscription,
+    ),
+  ];
 
   Future<List<Article>> articlesInSubscription(int subscriptionId) async {
-    final response = await api.get('/subscriptions/$subscriptionId/articles');
-    return _toArticleList(response);
+    return demoArticles;
   }
 
   Future<List<Article>> unreadArticles() async {
-    final response = await api.get('/unread');
-    return _toArticleList(response);
+    return demoArticles.where((a) => a.unread).toList();
   }
 
   /// Fetches the read later list
   Future<List<Article>> readLater() async {
-    final response = await api.get('/readlater');
-    return _toArticleList(response);
+    return demoArticles.where((a) => a.readLater).toList();
   }
 
   /// Fetch metadata about the remote feed that has not yet been added to the database
   Future<Feed> fetchRemoteFeedInfo(String feedUrl) async {
-    final response = await api.get('/feedinfo', query: {'url': feedUrl});
-    return Feed.fromJson(response);
+    return Feed(id: 0, title: "Unimplemented", description: 'Unimplemented');
   }
 
   /// Subscribe to a feed by it's URL.
@@ -45,10 +69,10 @@ class FeedService {
     String? title,
     String? description,
   }) async {
-    final response = await api.post(
-      '/subscribe',
-      body: {'url': url, 'title': title, 'description': description},
+    return Feed(
+      id: 0,
+      title: title ?? 'Unimplemented',
+      description: 'Unimplemented',
     );
-    return Feed.fromJson(response);
   }
 }

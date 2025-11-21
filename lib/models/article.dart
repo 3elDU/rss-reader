@@ -1,10 +1,5 @@
-import 'package:json_annotation/json_annotation.dart';
 import 'package:rss_reader/models/feed.dart';
-import 'package:rss_reader/util/api.dart';
 
-part 'article.g.dart';
-
-@JsonSerializable()
 class Article {
   final int id;
   final int subscriptionId;
@@ -16,7 +11,6 @@ class Article {
   final String title;
   final String? description;
   final Uri url;
-  @JsonKey(name: 'new')
   bool unread;
   final Uri? thumbnail;
   final DateTime created;
@@ -41,22 +35,12 @@ class Article {
     this.addedToReadLater,
   });
 
-  Future<void> toggleReadLater(ApiClient api) async {
-    if (readLater) {
-      await api.delete('/articles/$id/readlater');
-    } else {
-      await api.post('/articles/$id/readlater');
-    }
+  Future<void> toggleReadLater(dynamic api) async {
     readLater = !readLater;
   }
 
-  Future<void> markAsRead(ApiClient api) async {
+  Future<void> markAsRead(dynamic api) async {
     await api.post('/articles/$id/markread');
     unread = false;
   }
-
-  factory Article.fromJson(Map<String, dynamic> json) =>
-      _$ArticleFromJson(json);
-
-  Map<String, dynamic> toJson() => _$ArticleToJson(this);
 }

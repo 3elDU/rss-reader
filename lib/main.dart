@@ -1,124 +1,62 @@
+import 'package:drift/drift.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
+import 'package:rss_reader/database/database.dart' show Database;
 import 'package:rss_reader/models/feed.dart';
 import 'package:rss_reader/pages/add_feed.dart';
 import 'package:rss_reader/pages/feed.dart';
-import 'package:rss_reader/pages/login.dart';
 import 'package:rss_reader/pages/read_later.dart';
 import 'package:rss_reader/pages/subscriptions.dart';
-import 'package:rss_reader/services/auth.dart';
 import 'package:rss_reader/services/feed.dart';
 import 'package:rss_reader/widgets/error.dart';
-
-// Try to initialize the authentication service, and return the error object,
-// if there is an error
-Future<Object?> safeInitAuth(AuthService auth) async {
-  try {
-    await auth.initialize();
-  } catch (error) {
-    return error;
-  }
-
-  return null;
-}
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // Initialize authentication service early
-  final auth = AuthService();
-  final authError = await safeInitAuth(auth);
+  final db = Database();
 
-  runApp(MyApp(auth, authError: authError));
+  runApp(MyApp(FeedService()));
 }
 
 final GlobalKey<ScaffoldMessengerState> scaffoldMessengerKey = GlobalKey();
 
 class MyApp extends StatefulWidget {
-  // Auth service is initialized earlier
-  final AuthService _auth;
-  final Object? authError;
+  final FeedService feedService;
 
-  const MyApp(this._auth, {this.authError, super.key});
+  const MyApp(this.feedService, {super.key});
 
   @override
   State<MyApp> createState() => _MyAppState();
 }
 
 class _MyAppState extends State<MyApp> {
-  Object? _authError;
-
   @override
   void initState() {
     super.initState();
-    _authError = widget.authError;
   }
 
   // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
     return MultiProvider(
-      providers: [
-        ChangeNotifierProvider.value(value: widget._auth),
-        ProxyProvider<AuthService, FeedService>(
-          update: (_, auth, __) => FeedService(auth),
+      providers: [Provider.value(value: widget.feedService)],
+      child: MaterialApp(
+        title: 'Flutter Demo',
+        debugShowCheckedModeBanner: false,
+        theme: ThemeData(
+          // TODO: use system's primary color with 'dynamic_color' package
+          colorScheme: ColorScheme.fromSeed(seedColor: Colors.orange),
+          useMaterial3: true,
         ),
-      ],
-      child: Consumer<AuthService>(
-        builder: (_, auth, __) {
-          Widget page;
-
-          if (_authError != null) {
-            page = Scaffold(
-              body: CustomizableErrorScreen(
-                heading: 'API Error',
-                description:
-                    'There was an error communicating with the server. Most likely there is a problem with your internet connection, or the API is unreachable.',
-                error: _authError!,
-                onPressRetry: () async {
-                  final error = await safeInitAuth(widget._auth);
-                  setState(() {
-                    _authError = error;
-                  });
-                },
-                secondaryAction: FilledButton.tonal(
-                  child: const Text('Log out'),
-                  onPressed: () async {
-                    await widget._auth.logout();
-                    setState(() {
-                      _authError = null;
-                    });
-                  },
-                ),
-              ),
-            );
-          }
-
-          if (auth.isAuthenticated) {
-            page = const IndexPage();
-          } else {
-            page = const LoginPage();
-          }
-
-          return MaterialApp(
-            title: 'Flutter Demo',
-            debugShowCheckedModeBanner: false,
-            theme: ThemeData(
-              // TODO: use system's primary color with 'dynamic_color' package
-              colorScheme: ColorScheme.fromSeed(seedColor: Colors.orange),
-              useMaterial3: true,
-            ),
-            darkTheme: ThemeData(
-              colorScheme: ColorScheme.fromSeed(
-                seedColor: Colors.orange,
-                brightness: Brightness.dark,
-              ),
-            ),
-            scaffoldMessengerKey: scaffoldMessengerKey,
-            home: page,
-          );
-        },
+        darkTheme: ThemeData(
+          colorScheme: ColorScheme.fromSeed(
+            seedColor: Colors.orange,
+            brightness: Brightness.dark,
+          ),
+        ),
+        scaffoldMessengerKey: scaffoldMessengerKey,
+        home: const IndexPage(),
       ),
     );
   }
@@ -167,10 +105,9 @@ class _IndexPageState extends State<IndexPage> {
   @override
   Widget build(BuildContext context) {
     return AnnotatedRegion(
-      value:
-          Theme.of(context).brightness == Brightness.light
-              ? SystemUiOverlayStyle.dark
-              : SystemUiOverlayStyle.light,
+      value: Theme.of(context).brightness == Brightness.light
+          ? SystemUiOverlayStyle.dark
+          : SystemUiOverlayStyle.light,
       child: Scaffold(
         floatingActionButton: FloatingActionButton(
           tooltip: 'Add a new feed',

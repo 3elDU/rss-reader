@@ -41,11 +41,7 @@ class _SubscriptionPageState extends State<SubscriptionPage> {
         future: _articlesFuture,
         builder: (context, snapshot) {
           return ChangeNotifierProxyProvider0(
-            create:
-                (_) => ArticleListModel(
-                  articles: [],
-                  api: context.read<FeedService>().api,
-                ),
+            create: (_) => ArticleListModel(articles: []),
             update: (_, model) {
               model!.setArticles(snapshot.data ?? []);
               return model;
@@ -84,22 +80,19 @@ class _SubscriptionPageState extends State<SubscriptionPage> {
 
                 SliverPadding(
                   padding: const EdgeInsets.symmetric(horizontal: 16),
-                  sliver:
-                      snapshot.connectionState == ConnectionState.waiting
-                          ? _buildLoadingList()
-                          : Consumer<ArticleListModel>(
-                            builder:
-                                (_, model, _) => SliverList.separated(
-                                  itemCount: model.items.length,
-                                  itemBuilder:
-                                      (_, index) => ArticleCard(
-                                        snapshot.data![index],
-                                        clickableHeader: false,
-                                      ),
-                                  separatorBuilder:
-                                      (_, __) => const SizedBox(height: 10),
-                                ),
+                  sliver: snapshot.connectionState == ConnectionState.waiting
+                      ? _buildLoadingList()
+                      : Consumer<ArticleListModel>(
+                          builder: (_, model, _) => SliverList.separated(
+                            itemCount: model.items.length,
+                            itemBuilder: (_, index) => ArticleCard(
+                              snapshot.data![index],
+                              clickableHeader: false,
+                            ),
+                            separatorBuilder: (_, __) =>
+                                const SizedBox(height: 10),
                           ),
+                        ),
                 ),
 
                 const SliverToBoxAdapter(child: SizedBox(height: 16)),
