@@ -23,8 +23,18 @@ class Articles extends Table with IdAndTime {
   late final title = text()();
   late final description = text().nullable()();
   late final thumbnailUrl = text().nullable()();
-  late final status = textEnum<ArticleStatus>()();
+  late final status = textEnum<ArticleStatus>().clientDefault(
+    () => ArticleStatus.unread.name,
+  )();
   late final publishedAt = dateTime()();
+}
+
+/// Article that contains a reference to its parent feed
+class ArticleWithFeed {
+  const ArticleWithFeed(this.article, this.feed);
+
+  final Article article;
+  final Feed feed;
 }
 
 @DriftDatabase(tables: [Feeds, Articles])

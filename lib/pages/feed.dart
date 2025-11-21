@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:rss_reader/models/article.dart';
-import 'package:rss_reader/services/feed.dart';
+import 'package:rss_reader/database/database.dart';
+import 'package:rss_reader/repositories/feed.dart';
 import 'package:rss_reader/widgets/article/list.dart';
 
 class FeedPage extends StatefulWidget {
@@ -12,16 +12,16 @@ class FeedPage extends StatefulWidget {
 }
 
 class _FeedPageState extends State<FeedPage> {
-  late Future<List<Article>> _articlesFuture;
+  late Future<List<ArticleWithFeed>> _articlesFuture;
 
   @override
   void initState() {
     super.initState();
-    _articlesFuture = context.read<FeedService>().unreadArticles();
+    _articlesFuture = context.read<FeedRepository>().unreadArticles();
   }
 
   Future<void> _refresh() {
-    final future = context.read<FeedService>().unreadArticles();
+    final future = context.read<FeedRepository>().unreadArticles();
     setState(() {
       _articlesFuture = future;
     });

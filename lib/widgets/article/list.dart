@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:rss_reader/models/article.dart';
+import 'package:rss_reader/database/database.dart';
 import 'package:rss_reader/providers/article_list.dart';
 import 'package:rss_reader/widgets/article/card.dart';
 import 'package:rss_reader/widgets/article/skeleton.dart';
 import 'package:rss_reader/widgets/error.dart';
 
 class ArticleList extends StatelessWidget {
-  final Future<List<Article>> future;
+  final Future<List<ArticleWithFeed>> future;
 
   final Future<void> Function() onRefresh;
 
@@ -49,7 +49,10 @@ class ArticleList extends StatelessWidget {
                   physics: const AlwaysScrollableScrollPhysics(),
                   padding: const EdgeInsets.all(16),
                   itemCount: model.items.length,
-                  itemBuilder: (_, index) => ArticleCard(model.items[index]),
+                  itemBuilder: (_, index) => ArticleCard(
+                    model.items[index].article,
+                    model.items[index].feed,
+                  ),
                   separatorBuilder: (_, _) => const SizedBox(height: 10),
                 ),
               ),

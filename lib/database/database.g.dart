@@ -444,7 +444,8 @@ class $ArticlesTable extends Articles with TableInfo<$ArticlesTable, Article> {
         aliasedName,
         false,
         type: DriftSqlType.string,
-        requiredDuringInsert: true,
+        requiredDuringInsert: false,
+        clientDefault: () => ArticleStatus.unread.name,
       ).withConverter<ArticleStatus>($ArticlesTable.$converterstatus);
   static const VerificationMeta _publishedAtMeta = const VerificationMeta(
     'publishedAt',
@@ -814,12 +815,11 @@ class ArticlesCompanion extends UpdateCompanion<Article> {
     required String title,
     this.description = const Value.absent(),
     this.thumbnailUrl = const Value.absent(),
-    required ArticleStatus status,
+    this.status = const Value.absent(),
     required DateTime publishedAt,
   }) : feed = Value(feed),
        url = Value(url),
        title = Value(title),
-       status = Value(status),
        publishedAt = Value(publishedAt);
   static Insertable<Article> custom({
     Expression<int>? id,
@@ -1230,7 +1230,7 @@ typedef $$ArticlesTableCreateCompanionBuilder =
       required String title,
       Value<String?> description,
       Value<String?> thumbnailUrl,
-      required ArticleStatus status,
+      Value<ArticleStatus> status,
       required DateTime publishedAt,
     });
 typedef $$ArticlesTableUpdateCompanionBuilder =
@@ -1535,7 +1535,7 @@ class $$ArticlesTableTableManager
                 required String title,
                 Value<String?> description = const Value.absent(),
                 Value<String?> thumbnailUrl = const Value.absent(),
-                required ArticleStatus status,
+                Value<ArticleStatus> status = const Value.absent(),
                 required DateTime publishedAt,
               }) => ArticlesCompanion.insert(
                 id: id,

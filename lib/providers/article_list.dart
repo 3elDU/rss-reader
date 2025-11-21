@@ -1,25 +1,26 @@
 import 'dart:collection';
 
 import 'package:flutter/foundation.dart';
-import 'package:rss_reader/models/article.dart';
+import 'package:rss_reader/database/database.dart';
 
 /// Provides a modifiable list of articles.
 class ArticleListModel extends ChangeNotifier {
-  final List<Article> _articles;
+  final List<ArticleWithFeed> _articles;
 
-  UnmodifiableListView<Article> get items => UnmodifiableListView(_articles);
+  UnmodifiableListView<ArticleWithFeed> get items =>
+      UnmodifiableListView(_articles);
 
   ArticleListModel({
     /// Provide an initial list of articles
-    required List<Article> articles,
+    required List<ArticleWithFeed> articles,
   }) : _articles = articles;
 
-  Article getArticleById(int id) {
-    return _articles.firstWhere((article) => article.id == id);
+  ArticleWithFeed getArticleById(int id) {
+    return _articles.firstWhere((m) => m.article.id == id);
   }
 
   /// Replace the list of articles with a new one.
-  void setArticles(List<Article> articles) {
+  void setArticles(List<ArticleWithFeed> articles) {
     _articles.clear();
     _articles.addAll(articles);
     notifyListeners();

@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:rss_reader/models/article.dart';
-import 'package:rss_reader/models/feed.dart';
+import 'package:rss_reader/database/database.dart';
 import 'package:rss_reader/providers/article_list.dart';
-import 'package:rss_reader/services/feed.dart';
+import 'package:rss_reader/repositories/feed.dart';
 import 'package:rss_reader/widgets/article/card.dart';
 import 'package:rss_reader/widgets/article/skeleton.dart';
 
@@ -18,12 +17,13 @@ class SubscriptionPage extends StatefulWidget {
 }
 
 class _SubscriptionPageState extends State<SubscriptionPage> {
-  late Future<List<Article>> _articlesFuture;
+  late Future<List<ArticleWithFeed>> _articlesFuture;
 
   @override
   void initState() {
     super.initState();
-    _articlesFuture = context.read<FeedService>().articlesInSubscription(
+
+    _articlesFuture = context.read<FeedRepository>().articlesInFeed(
       widget.subscription.id,
     );
   }
@@ -86,7 +86,8 @@ class _SubscriptionPageState extends State<SubscriptionPage> {
                           builder: (_, model, _) => SliverList.separated(
                             itemCount: model.items.length,
                             itemBuilder: (_, index) => ArticleCard(
-                              snapshot.data![index],
+                              snapshot.data![index].article,
+                              snapshot.data![index].feed,
                               clickableHeader: false,
                             ),
                             separatorBuilder: (_, __) =>

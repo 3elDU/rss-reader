@@ -1,30 +1,35 @@
-import 'package:drift/drift.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
-import 'package:rss_reader/database/database.dart' show Database;
-import 'package:rss_reader/models/feed.dart';
+import 'package:rss_reader/database/database.dart';
 import 'package:rss_reader/pages/add_feed.dart';
 import 'package:rss_reader/pages/feed.dart';
 import 'package:rss_reader/pages/read_later.dart';
 import 'package:rss_reader/pages/subscriptions.dart';
+import 'package:rss_reader/repositories/feed.dart';
 import 'package:rss_reader/services/feed.dart';
-import 'package:rss_reader/widgets/error.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   final db = Database();
 
-  runApp(MyApp(FeedService()));
+  runApp(
+    MyApp(feedService: FeedService(db), feedRepository: FeedRepository(db)),
+  );
 }
 
 final GlobalKey<ScaffoldMessengerState> scaffoldMessengerKey = GlobalKey();
 
 class MyApp extends StatefulWidget {
   final FeedService feedService;
+  final FeedRepository feedRepository;
 
-  const MyApp(this.feedService, {super.key});
+  const MyApp({
+    super.key,
+    required this.feedService,
+    required this.feedRepository,
+  });
 
   @override
   State<MyApp> createState() => _MyAppState();
@@ -40,7 +45,10 @@ class _MyAppState extends State<MyApp> {
   @override
   Widget build(BuildContext context) {
     return MultiProvider(
-      providers: [Provider.value(value: widget.feedService)],
+      providers: [
+        Provider<FeedService>.value(value: widget.feedService),
+        Provider<FeedRepository>.value(value: widget.feedRepository),
+      ],
       child: MaterialApp(
         title: 'Flutter Demo',
         debugShowCheckedModeBanner: false,
