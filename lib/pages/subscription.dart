@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:rss_reader/database/database.dart';
+import 'package:rss_reader/database/dataclasses.dart';
 import 'package:rss_reader/providers/article_list.dart';
 import 'package:rss_reader/repositories/feed.dart';
 import 'package:rss_reader/widgets/article/card.dart';
@@ -41,7 +42,10 @@ class _SubscriptionPageState extends State<SubscriptionPage> {
         future: _articlesFuture,
         builder: (context, snapshot) {
           return ChangeNotifierProxyProvider0(
-            create: (_) => ArticleListModel(articles: []),
+            create: (_) => ArticleListModel(
+              articles: [],
+              repo: context.read<FeedRepository>(),
+            ),
             update: (_, model) {
               model!.setArticles(snapshot.data ?? []);
               return model;
@@ -86,8 +90,7 @@ class _SubscriptionPageState extends State<SubscriptionPage> {
                           builder: (_, model, _) => SliverList.separated(
                             itemCount: model.items.length,
                             itemBuilder: (_, index) => ArticleCard(
-                              snapshot.data![index].article,
-                              snapshot.data![index].feed,
+                              snapshot.data![index],
                               clickableHeader: false,
                             ),
                             separatorBuilder: (_, __) =>

@@ -29,14 +29,6 @@ class Articles extends Table with IdAndTime {
   late final publishedAt = dateTime()();
 }
 
-/// Article that contains a reference to its parent feed
-class ArticleWithFeed {
-  const ArticleWithFeed(this.article, this.feed);
-
-  final Article article;
-  final Feed feed;
-}
-
 @DriftDatabase(tables: [Feeds, Articles])
 class Database extends _$Database {
   Database([QueryExecutor? executor]) : super(executor ?? _openConnection());

@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:rss_reader/database/database.dart';
+import 'package:rss_reader/database/dataclasses.dart';
 import 'package:rss_reader/providers/article_list.dart';
+import 'package:rss_reader/repositories/feed.dart';
 import 'package:rss_reader/widgets/article/card.dart';
 import 'package:rss_reader/widgets/article/skeleton.dart';
 import 'package:rss_reader/widgets/error.dart';
@@ -41,7 +42,10 @@ class ArticleList extends StatelessWidget {
           }
 
           return ChangeNotifierProvider<ArticleListModel>(
-            create: (context) => ArticleListModel(articles: snapshot.data!),
+            create: (context) => ArticleListModel(
+              articles: snapshot.data!,
+              repo: context.read<FeedRepository>(),
+            ),
             child: RefreshIndicator(
               onRefresh: onRefresh,
               child: Consumer<ArticleListModel>(
@@ -49,10 +53,7 @@ class ArticleList extends StatelessWidget {
                   physics: const AlwaysScrollableScrollPhysics(),
                   padding: const EdgeInsets.all(16),
                   itemCount: model.items.length,
-                  itemBuilder: (_, index) => ArticleCard(
-                    model.items[index].article,
-                    model.items[index].feed,
-                  ),
+                  itemBuilder: (_, index) => ArticleCard(model.items[index]),
                   separatorBuilder: (_, _) => const SizedBox(height: 10),
                 ),
               ),

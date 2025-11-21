@@ -1,5 +1,6 @@
 import 'package:drift/drift.dart';
 import 'package:rss_reader/database/database.dart';
+import 'package:rss_reader/database/dataclasses.dart';
 
 /// Abstracts away basic database operations with articles and feeds.
 class FeedRepository {
@@ -22,21 +23,39 @@ class FeedRepository {
         });
   }
 
+  /// Returns a list of articles in the given feed
   Future<List<ArticleWithFeed>> articlesInFeed(int feedId) async {
     return _join(
       db.select(db.articles)..where((a) => a.feed.equals(feedId)),
     ).get();
   }
 
+  /// Returns a list of all unread articles
   Future<List<ArticleWithFeed>> unreadArticles() async {
     return _join(
       db.select(db.articles)..where((a) => a.status.equalsValue(.unread)),
     ).get();
   }
 
+  /// Returns a list of all articles marked as snoozed (read later)
   Future<List<ArticleWithFeed>> snoozedArticles() async {
     return _join(
       db.select(db.articles)..where((a) => a.status.equalsValue(.snoozed)),
     ).get();
+  }
+
+  /// Marks the specified article as read, returning the article with an updated status
+  Future<Article> markRead(Article article) async {
+    article = article.copyWith(status: ArticleStatus.read);
+    await db.update(db.articles).replace(article);
+    return article;
+  }
+
+  /// Puts the article into read later list (sets its status to snoozed),
+  /// returning the article with an updated status
+  Future<Article> snooze(Article article) async {
+    article = article.copyWith(status: ArticleStatus.snoozed);
+    await db.update(db.articles).replace(article);
+    return article;
   }
 }

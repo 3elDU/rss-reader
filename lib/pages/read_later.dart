@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:rss_reader/database/database.dart';
+import 'package:rss_reader/database/dataclasses.dart';
 import 'package:rss_reader/repositories/feed.dart';
 import 'package:rss_reader/widgets/article/list.dart';
 
