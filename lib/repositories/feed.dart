@@ -25,7 +25,9 @@ class FeedRepository {
 
   /// Takes an existing select() statement, and orders it by article publish
   /// date from newest to oldest
-  _order(SimpleSelectStatement<$ArticlesTable, Article> q) {
+  SimpleSelectStatement<$ArticlesTable, Article> _order(
+    SimpleSelectStatement<$ArticlesTable, Article> q,
+  ) {
     return (q..orderBy([(a) => OrderingTerm.desc(a.publishedAt)]));
   }
 

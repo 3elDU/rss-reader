@@ -114,7 +114,7 @@ class _AddNewFeedDialogState extends State<AddNewFeedDialog> {
                 // Intercept the back button and navigate to first page when it is pressed
                 PopScope(
                   canPop: false,
-                  onPopInvokedWithResult: (_, __) => animateToFirstPage(),
+                  onPopInvokedWithResult: (_, _) => animateToFirstPage(),
                   child: _SecondPage(
                     _feed!,
                     onGoBack: animateToFirstPage,

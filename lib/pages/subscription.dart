@@ -32,7 +32,7 @@ class _SubscriptionPageState extends State<SubscriptionPage> {
   Widget _buildLoadingList() => SliverList.separated(
     itemCount: 10,
     itemBuilder: (_, index) => ArticleCardSkeleton(high: index.isEven),
-    separatorBuilder: (_, __) => const SizedBox(height: 10),
+    separatorBuilder: (_, _) => const SizedBox(height: 10),
   );
 
   @override
@@ -93,7 +93,7 @@ class _SubscriptionPageState extends State<SubscriptionPage> {
                               snapshot.data![index],
                               clickableHeader: false,
                             ),
-                            separatorBuilder: (_, __) =>
+                            separatorBuilder: (_, _) =>
                                 const SizedBox(height: 10),
                           ),
                         ),

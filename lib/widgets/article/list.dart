@@ -54,7 +54,7 @@ class ArticleList extends StatelessWidget {
                   Padding(padding: .all(16), child: ArticleSearchBar()),
                   Expanded(
                     child: Consumer<ArticleListModel>(
-                      builder: (_, model, __) => ListView.separated(
+                      builder: (_, model, _) => ListView.separated(
                         physics: const AlwaysScrollableScrollPhysics(),
                         padding: const EdgeInsets.all(16),
                         itemCount: model.items.length,
