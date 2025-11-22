@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:rss_reader/pages/subscription.dart';
-import 'package:rss_reader/repositories/feed.dart';
+import 'package:rss_reader/repositories/article.dart';
 
 class ArticleSearchBar extends StatefulWidget {
   const ArticleSearchBar({super.key});
@@ -30,7 +30,7 @@ class _ArticleSearchBarState extends State<ArticleSearchBar> {
       suggestionsBuilder: (context, controller) async {
         if (controller.text.isEmpty) return [];
 
-        final results = await context.read<FeedRepository>().search(
+        final results = await context.read<ArticleRepository>().search(
           controller.text,
         );
 

@@ -38,11 +38,10 @@ class CustomizableErrorScreen extends StatefulWidget {
             Navigator.push(
               context,
               MaterialPageRoute(
-                builder:
-                    (_) => Scaffold(
-                      appBar: AppBar(title: const Text('Error details')),
-                      body: this,
-                    ),
+                builder: (_) => Scaffold(
+                  appBar: AppBar(title: const Text('Error details')),
+                  body: this,
+                ),
                 fullscreenDialog: true,
               ),
             );

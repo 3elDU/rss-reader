@@ -109,6 +109,7 @@ class ArticleCard extends StatelessWidget {
                 if (model.article.thumbnailUrl != null)
                   Expanded(
                     child: ArticleThumbnail(
+                      model.article.id,
                       Uri.parse(model.article.thumbnailUrl!),
                     ),
                   ),
@@ -156,9 +157,11 @@ class ArticleCard extends StatelessWidget {
 }
 
 class ArticleThumbnail extends StatelessWidget {
+  /// Used to differentiate articles with matching thumbnail URLs
+  final int articleId;
   final Uri thumbnail;
 
-  const ArticleThumbnail(this.thumbnail, {super.key});
+  const ArticleThumbnail(this.articleId, this.thumbnail, {super.key});
 
   void _previewThumbnail(BuildContext context) {
     Navigator.push<void>(
@@ -182,7 +185,7 @@ class ArticleThumbnail extends StatelessWidget {
             // The image was fully loaded
             return GestureDetector(
               onTap: () => _previewThumbnail(context),
-              child: Hero(tag: thumbnail, child: child),
+              child: Hero(tag: articleId, child: child),
             );
           }
 
