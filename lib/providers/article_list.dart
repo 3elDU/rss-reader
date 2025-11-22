@@ -2,11 +2,11 @@ import 'dart:collection';
 
 import 'package:flutter/foundation.dart';
 import 'package:rss_reader/database/dataclasses.dart';
-import 'package:rss_reader/repositories/feed.dart';
+import 'package:rss_reader/repositories/article.dart';
 
 /// Provides a modifiable list of articles.
 class ArticleListModel extends ChangeNotifier {
-  final FeedRepository repo;
+  final ArticleRepository repo;
   final List<ArticleWithFeed> _items;
 
   UnmodifiableListView<ArticleWithFeed> get items =>

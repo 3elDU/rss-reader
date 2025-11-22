@@ -3,15 +3,22 @@ import 'package:provider/provider.dart';
 import 'package:rss_reader/database/database.dart';
 import 'package:rss_reader/database/dataclasses.dart';
 import 'package:rss_reader/providers/article_list.dart';
+import 'package:rss_reader/repositories/article.dart';
 import 'package:rss_reader/repositories/feed.dart';
 import 'package:rss_reader/widgets/article/card.dart';
 import 'package:rss_reader/widgets/article/skeleton.dart';
 
 /// Page showing subscription info, as well as all articles inside it
 class SubscriptionPage extends StatefulWidget {
-  final Feed subscription;
+  final Feed feed;
 
-  const SubscriptionPage(this.subscription, {super.key});
+  const SubscriptionPage(this.feed, {super.key});
+
+  static void open(BuildContext context, Feed subscription) {
+    Navigator.of(context).push(
+      MaterialPageRoute(builder: (context) => SubscriptionPage(subscription)),
+    );
+  }
 
   @override
   State<SubscriptionPage> createState() => _SubscriptionPageState();
@@ -24,9 +31,40 @@ class _SubscriptionPageState extends State<SubscriptionPage> {
   void initState() {
     super.initState();
 
-    _articlesFuture = context.read<FeedRepository>().articlesInFeed(
-      widget.subscription.id,
+    _articlesFuture = context.read<ArticleRepository>().articlesInFeed(
+      widget.feed.id,
     );
+  }
+
+  void _unsubscribe() async {
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Unsubscribe?'),
+        content: const Text('All articles from this feed will also be deleted'),
+        actions: [
+          TextButton(
+            child: const Text('No'),
+            onPressed: () => Navigator.pop<bool>(context, true),
+          ),
+          TextButton(
+            child: const Text('Yes'),
+            onPressed: () => Navigator.pop<bool>(context, true),
+          ),
+        ],
+      ),
+    );
+
+    if (confirm == null || !confirm || !mounted) return;
+
+    await context.read<FeedRepository>().unsubscribe(widget.feed);
+
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Unsubscribed from ${widget.feed.title}')),
+      );
+      Navigator.pop(context);
+    }
   }
 
   Widget _buildLoadingList() => SliverList.separated(
@@ -44,7 +82,7 @@ class _SubscriptionPageState extends State<SubscriptionPage> {
           return ChangeNotifierProxyProvider0(
             create: (_) => ArticleListModel(
               articles: [],
-              repo: context.read<FeedRepository>(),
+              repo: context.read<ArticleRepository>(),
             ),
             update: (_, model) {
               model!.setArticles(snapshot.data ?? []);
@@ -57,23 +95,23 @@ class _SubscriptionPageState extends State<SubscriptionPage> {
                 SliverAppBar.large(
                   flexibleSpace: FlexibleSpaceBar(
                     centerTitle: true,
-                    title: Text(widget.subscription.title),
+                    title: Text(widget.feed.title),
                   ),
                   actions: [
                     IconButton(
                       icon: const Icon(Icons.delete),
-                      onPressed: () {},
                       tooltip: 'Unsubscribe',
+                      onPressed: _unsubscribe,
                     ),
                   ],
                 ),
                 // Description
-                if (widget.subscription.description != null)
+                if (widget.feed.description != null)
                   SliverPadding(
                     padding: const EdgeInsets.symmetric(horizontal: 24),
                     sliver: SliverToBoxAdapter(
                       child: Text(
-                        widget.subscription.description!,
+                        widget.feed.description!,
                         style: Theme.of(context).textTheme.bodyLarge,
                         textAlign: TextAlign.center,
                       ),

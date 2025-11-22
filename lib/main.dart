@@ -6,6 +6,7 @@ import 'package:rss_reader/pages/add_feed.dart';
 import 'package:rss_reader/pages/feed.dart';
 import 'package:rss_reader/pages/read_later.dart';
 import 'package:rss_reader/pages/subscriptions.dart';
+import 'package:rss_reader/repositories/article.dart';
 import 'package:rss_reader/repositories/feed.dart';
 import 'package:rss_reader/services/feed.dart';
 
@@ -15,7 +16,11 @@ void main() async {
   final db = Database();
 
   runApp(
-    MyApp(feedService: FeedService(db), feedRepository: FeedRepository(db)),
+    MyApp(
+      feedService: FeedService(db),
+      feedRepository: FeedRepository(db),
+      articleRepository: ArticleRepository(db),
+    ),
   );
 }
 
@@ -24,11 +29,13 @@ final GlobalKey<ScaffoldMessengerState> scaffoldMessengerKey = GlobalKey();
 class MyApp extends StatefulWidget {
   final FeedService feedService;
   final FeedRepository feedRepository;
+  final ArticleRepository articleRepository;
 
   const MyApp({
     super.key,
     required this.feedService,
     required this.feedRepository,
+    required this.articleRepository,
   });
 
   @override
@@ -48,6 +55,7 @@ class _MyAppState extends State<MyApp> {
       providers: [
         Provider<FeedService>.value(value: widget.feedService),
         Provider<FeedRepository>.value(value: widget.feedRepository),
+        Provider<ArticleRepository>.value(value: widget.articleRepository),
       ],
       child: MaterialApp(
         title: 'Flutter Demo',

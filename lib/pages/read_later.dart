@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:rss_reader/database/dataclasses.dart';
-import 'package:rss_reader/repositories/feed.dart';
+import 'package:rss_reader/repositories/article.dart';
 import 'package:rss_reader/widgets/article/list.dart';
 
 class ReadLaterPage extends StatefulWidget {
@@ -18,11 +18,11 @@ class _ReadLaterPageState extends State<ReadLaterPage> {
   void initState() {
     super.initState();
 
-    _articlesFuture = context.read<FeedRepository>().snoozedArticles();
+    _articlesFuture = context.read<ArticleRepository>().snoozedArticles();
   }
 
   Future<void> _refresh() {
-    final future = context.read<FeedRepository>().snoozedArticles();
+    final future = context.read<ArticleRepository>().snoozedArticles();
     setState(() {
       _articlesFuture = future;
     });
