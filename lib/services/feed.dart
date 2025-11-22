@@ -1,54 +1,61 @@
-import 'package:rss_reader/models/article.dart';
-import 'package:rss_reader/models/feed.dart';
-import 'package:rss_reader/services/auth.dart';
-import 'package:rss_reader/util/api.dart';
+import 'package:http/http.dart' as http;
+import 'package:drift/drift.dart';
+import 'package:rss_dart/domain/rss1_feed.dart';
+import 'package:rss_reader/database/database.dart';
+import 'package:rss_reader/database/companions.dart';
+import 'package:rss_dart/dart_rss.dart';
 
 /// Allows fetching feeds from the backend
 class FeedService {
-  final ApiClient api;
+  final Database db;
 
-  FeedService(AuthService auth) : api = ApiClient(auth.baseUrl!, auth.token!);
+  FeedService(this.db);
 
-  List<Article> _toArticleList(dynamic response) {
-    return (response as List<dynamic>)
-        .map((article) => Article.fromJson(article))
-        .toList();
-  }
+  /// Fetches and parses a remote feed including it's articles, returning
+  /// a dataclass ready for insertion into the database.
+  Future<FeedWithArticlesCompanion> fetchRemoteFeedInfo(Uri feedUrl) async {
+    final xml = (await http.get(feedUrl)).body;
 
-  Future<List<Article>> articlesInSubscription(int subscriptionId) async {
-    final response = await api.get('/subscriptions/$subscriptionId/articles');
-    return _toArticleList(response);
-  }
-
-  Future<List<Article>> unreadArticles() async {
-    final response = await api.get('/unread');
-    return _toArticleList(response);
-  }
-
-  /// Fetches the read later list
-  Future<List<Article>> readLater() async {
-    final response = await api.get('/readlater');
-    return _toArticleList(response);
-  }
-
-  /// Fetch metadata about the remote feed that has not yet been added to the database
-  Future<Feed> fetchRemoteFeedInfo(String feedUrl) async {
-    final response = await api.get('/feedinfo', query: {'url': feedUrl});
-    return Feed.fromJson(response);
+    return switch (WebFeed.detectRssVersion(xml)) {
+      .rss1 => FeedWithArticlesCompanion.fromRss1(
+        feedUrl.toString(),
+        Rss1Feed.parse(xml),
+      ),
+      .rss2 => FeedWithArticlesCompanion.fromRss2(
+        feedUrl.toString(),
+        RssFeed.parse(xml),
+      ),
+      .atom => FeedWithArticlesCompanion.fromAtom(
+        feedUrl.toString(),
+        AtomFeed.parse(xml),
+      ),
+      .unknown => throw Exception('Unknown feed format'),
+    };
   }
 
   /// Subscribe to a feed by it's URL.
   ///
   /// [title] and [description] allow to override title and description of the feed
   Future<Feed> subscribeToFeed(
-    String url, {
+    FeedWithArticlesCompanion companion, {
     String? title,
     String? description,
   }) async {
-    final response = await api.post(
-      '/subscribe',
-      body: {'url': url, 'title': title, 'description': description},
-    );
-    return Feed.fromJson(response);
+    companion = companion.copyWith(name: title, description: description);
+
+    final feed = await db.into(db.feeds).insertReturning(companion.feed);
+
+    final articles = companion.articles
+        .map((article) => article.copyWith(feed: Value(feed.id)))
+        .toList();
+
+    await db.batch((batch) {
+      batch.insertAll(db.articles, articles);
+    });
+
+    return feed;
   }
+
+  /// Opens article in user's default browser
+  Future<void> openArticle(Article article) async {}
 }

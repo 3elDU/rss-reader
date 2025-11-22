@@ -2,8 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:provider/provider.dart';
+import 'package:rss_reader/database/database.dart';
+import 'package:rss_reader/database/dataclasses.dart';
 import 'package:rss_reader/main.dart';
-import 'package:rss_reader/models/article.dart';
 import 'package:rss_reader/pages/subscription.dart';
 import 'package:rss_reader/providers/article_list.dart';
 import 'package:rss_reader/widgets/error.dart';
@@ -11,13 +12,13 @@ import 'package:timeago/timeago.dart' as timeago;
 import 'package:url_launcher/url_launcher.dart';
 
 class ArticleCard extends StatelessWidget {
-  final Article article;
+  final ArticleWithFeed model;
 
   /// Whether to enable the clickable header, that navigates to subscription
   /// page
   final bool clickableHeader;
 
-  const ArticleCard(this.article, {super.key, this.clickableHeader = true});
+  const ArticleCard(this.model, {super.key, this.clickableHeader = true});
 
   Widget _buildTitle(BuildContext context) {
     return DefaultTextStyle.merge(
@@ -26,15 +27,18 @@ class ArticleCard extends StatelessWidget {
       ),
       child: Row(
         children: [
-          if (article.unread) const Badge(label: Text('New')),
-          if (article.unread) const SizedBox(width: 8.0),
+          if (model.article.status == .unread ||
+              model.article.status == .snoozed) ...[
+            const Badge(label: Text('New')),
+            const SizedBox(width: 8.0),
+          ],
           Expanded(
             child: Tooltip(
               // TODO: format this to user's locale
-              message: article.created.toString(),
+              message: model.article.createdAt.toString(),
               child: Text(
-                '${article.subscription!.title} • ${timeago.format(article.created)}',
-                overflow: TextOverflow.ellipsis,
+                '${model.feed.title} • ${timeago.format(model.article.createdAt)}',
+                overflow: .ellipsis,
               ),
             ),
           ),
@@ -45,9 +49,14 @@ class ArticleCard extends StatelessWidget {
 
   /// [ArticleListModel] is required to mark article as read
   Future<void> _openInBrowser(BuildContext context) async {
-    if (!(await launchUrl(article.url, mode: LaunchMode.externalApplication))) {
+    if (!(await launchUrl(
+      Uri.parse(model.article.url),
+      mode: LaunchMode.externalApplication,
+    ))) {
       // If opening a web browser failed, copy article URL to the clipboard
-      await Clipboard.setData(ClipboardData(text: article.url.toString()));
+      await Clipboard.setData(
+        ClipboardData(text: model.article.url.toString()),
+      );
       scaffoldMessengerKey.currentState!.showSnackBar(
         const SnackBar(
           content: Text(
@@ -58,7 +67,7 @@ class ArticleCard extends StatelessWidget {
     }
 
     if (context.mounted) {
-      await context.read<ArticleListModel?>()?.markAsRead(article.id);
+      await context.read<ArticleListModel?>()?.markAsRead(model);
     }
   }
 
@@ -83,7 +92,7 @@ class ArticleCard extends StatelessWidget {
                       _buildTitle(context),
                       const SizedBox(height: 8.0),
                       Text(
-                        article.title,
+                        model.article.title,
                         maxLines: 3,
                         style: Theme.of(context).textTheme.titleMedium,
                       ),
@@ -95,30 +104,30 @@ class ArticleCard extends StatelessWidget {
                 const SizedBox(width: 8.0),
 
                 // Thumbnail
-                if (article.thumbnail != null) const SizedBox(height: 8.0),
-                if (article.thumbnail != null)
-                  Expanded(child: ArticleThumbnail(article.thumbnail!)),
+                if (model.article.thumbnailUrl != null)
+                  const SizedBox(height: 8.0),
+                if (model.article.thumbnailUrl != null)
+                  Expanded(
+                    child: ArticleThumbnail(
+                      Uri.parse(model.article.thumbnailUrl!),
+                    ),
+                  ),
               ],
             ),
             const SizedBox(height: 8.0),
             // Video indicator / actions
             Row(
-              mainAxisAlignment:
-                  (article.video == true)
-                      ? MainAxisAlignment.spaceBetween
-                      : MainAxisAlignment.end,
-              crossAxisAlignment: CrossAxisAlignment.center,
+              mainAxisAlignment: .end,
+              crossAxisAlignment: .center,
               children: [
-                if (article.video == true) const Icon(Icons.videocam),
-
                 // Actions
                 Row(
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
-                    AddToReadLaterButton(article),
+                    AddToReadLaterButton(model),
                     FilledButton(
                       onPressed: () => _openInBrowser(context),
-                      child: Text(article.video == true ? 'Watch' : 'Read'),
+                      child: Text('Read'),
                     ),
                   ],
                 ),
@@ -134,7 +143,7 @@ class ArticleCard extends StatelessWidget {
         onTap: () {
           Navigator.of(context).push(
             MaterialPageRoute(
-              builder: (context) => SubscriptionPage(article.subscription!),
+              builder: (context) => SubscriptionPage(model.feed),
             ),
           );
         },
@@ -226,9 +235,9 @@ class ThumbnailViewer extends StatelessWidget {
 }
 
 class AddToReadLaterButton extends StatefulWidget {
-  final Article article;
+  final ArticleWithFeed model;
 
-  const AddToReadLaterButton(this.article, {super.key});
+  const AddToReadLaterButton(this.model, {super.key});
 
   @override
   State<AddToReadLaterButton> createState() => _AddToReadLaterButtonState();
@@ -262,15 +271,15 @@ class _AddToReadLaterButtonState extends State<AddToReadLaterButton> {
         }
 
         return IconButton(
-          icon:
-              widget.article.readLater
-                  ? const Icon(Icons.check)
-                  : const Icon(Icons.schedule),
+          icon: widget.model.article.status == ArticleStatus.snoozed
+              ? const Icon(Icons.check)
+              : const Icon(Icons.schedule),
+          tooltip: 'Read this later',
           onPressed: () {
             setState(() {
               _toggleReadLaterFuture = context
                   .read<ArticleListModel>()
-                  .toggleReadLater(widget.article.id)
+                  .snooze(widget.model)
                   .onError(handleError);
             });
           },

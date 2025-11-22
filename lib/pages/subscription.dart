@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:rss_reader/models/article.dart';
-import 'package:rss_reader/models/feed.dart';
+import 'package:rss_reader/database/database.dart';
+import 'package:rss_reader/database/dataclasses.dart';
 import 'package:rss_reader/providers/article_list.dart';
-import 'package:rss_reader/services/feed.dart';
+import 'package:rss_reader/repositories/feed.dart';
 import 'package:rss_reader/widgets/article/card.dart';
 import 'package:rss_reader/widgets/article/skeleton.dart';
 
@@ -18,12 +18,13 @@ class SubscriptionPage extends StatefulWidget {
 }
 
 class _SubscriptionPageState extends State<SubscriptionPage> {
-  late Future<List<Article>> _articlesFuture;
+  late Future<List<ArticleWithFeed>> _articlesFuture;
 
   @override
   void initState() {
     super.initState();
-    _articlesFuture = context.read<FeedService>().articlesInSubscription(
+
+    _articlesFuture = context.read<FeedRepository>().articlesInFeed(
       widget.subscription.id,
     );
   }
@@ -31,7 +32,7 @@ class _SubscriptionPageState extends State<SubscriptionPage> {
   Widget _buildLoadingList() => SliverList.separated(
     itemCount: 10,
     itemBuilder: (_, index) => ArticleCardSkeleton(high: index.isEven),
-    separatorBuilder: (_, __) => const SizedBox(height: 10),
+    separatorBuilder: (_, _) => const SizedBox(height: 10),
   );
 
   @override
@@ -41,11 +42,10 @@ class _SubscriptionPageState extends State<SubscriptionPage> {
         future: _articlesFuture,
         builder: (context, snapshot) {
           return ChangeNotifierProxyProvider0(
-            create:
-                (_) => ArticleListModel(
-                  articles: [],
-                  api: context.read<FeedService>().api,
-                ),
+            create: (_) => ArticleListModel(
+              articles: [],
+              repo: context.read<FeedRepository>(),
+            ),
             update: (_, model) {
               model!.setArticles(snapshot.data ?? []);
               return model;
@@ -84,22 +84,19 @@ class _SubscriptionPageState extends State<SubscriptionPage> {
 
                 SliverPadding(
                   padding: const EdgeInsets.symmetric(horizontal: 16),
-                  sliver:
-                      snapshot.connectionState == ConnectionState.waiting
-                          ? _buildLoadingList()
-                          : Consumer<ArticleListModel>(
-                            builder:
-                                (_, model, _) => SliverList.separated(
-                                  itemCount: model.items.length,
-                                  itemBuilder:
-                                      (_, index) => ArticleCard(
-                                        snapshot.data![index],
-                                        clickableHeader: false,
-                                      ),
-                                  separatorBuilder:
-                                      (_, __) => const SizedBox(height: 10),
-                                ),
+                  sliver: snapshot.connectionState == ConnectionState.waiting
+                      ? _buildLoadingList()
+                      : Consumer<ArticleListModel>(
+                          builder: (_, model, _) => SliverList.separated(
+                            itemCount: model.items.length,
+                            itemBuilder: (_, index) => ArticleCard(
+                              snapshot.data![index],
+                              clickableHeader: false,
+                            ),
+                            separatorBuilder: (_, _) =>
+                                const SizedBox(height: 10),
                           ),
+                        ),
                 ),
 
                 const SliverToBoxAdapter(child: SizedBox(height: 16)),

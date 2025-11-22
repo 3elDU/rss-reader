@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:rss_reader/models/feed.dart';
+import 'package:rss_reader/database/companions.dart';
 import 'package:rss_reader/services/feed.dart';
 import 'package:rss_reader/widgets/error.dart';
-import 'package:rss_reader/widgets/subscription/thumbnail.dart';
 
 class AddNewFeedDialog extends StatefulWidget {
   final FeedService feedService;
@@ -15,7 +14,7 @@ class AddNewFeedDialog extends StatefulWidget {
 
 class _AddNewFeedDialogState extends State<AddNewFeedDialog> {
   final PageController _pageController = PageController();
-  Feed? _feed;
+  FeedWithArticlesCompanion? _feed;
   // We don't care about the underlying type.
   // Store the future for displaying loading state
   Future<dynamic>? _requestFuture;
@@ -39,25 +38,13 @@ class _AddNewFeedDialogState extends State<AddNewFeedDialog> {
     );
   }
 
-  Future<void> fetchFeedInfo(String url) async {
+  Future<void> fetchFeedInfo(Uri url) async {
     try {
       final future = widget.feedService.fetchRemoteFeedInfo(url);
       setState(() {
         _requestFuture = future;
       });
       final feed = await future;
-
-      // If feed id is not zero in the response, this means that there is an existing feed with the same URL in the database
-      if (feed.id != 0 && mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text(
-              'A feed with the following URL already exists in the database',
-            ),
-          ),
-        );
-        return;
-      }
 
       setState(() {
         _feed = feed;
@@ -84,7 +71,7 @@ class _AddNewFeedDialogState extends State<AddNewFeedDialog> {
   }) async {
     try {
       final future = widget.feedService.subscribeToFeed(
-        url,
+        _feed!,
         title: title,
         description: description,
       );
@@ -127,7 +114,7 @@ class _AddNewFeedDialogState extends State<AddNewFeedDialog> {
                 // Intercept the back button and navigate to first page when it is pressed
                 PopScope(
                   canPop: false,
-                  onPopInvokedWithResult: (_, __) => animateToFirstPage(),
+                  onPopInvokedWithResult: (_, _) => animateToFirstPage(),
                   child: _SecondPage(
                     _feed!,
                     onGoBack: animateToFirstPage,
@@ -144,7 +131,7 @@ class _AddNewFeedDialogState extends State<AddNewFeedDialog> {
 }
 
 class _FirstPage extends StatefulWidget {
-  final void Function(String url) onSubmitUrl;
+  final void Function(Uri url) onSubmitUrl;
   final bool loading;
 
   const _FirstPage({required this.onSubmitUrl, required this.loading});
@@ -182,21 +169,23 @@ class _FirstPageState extends State<_FirstPage> {
               if (widget.loading) const CircularProgressIndicator(),
               const SizedBox(width: 8.0),
               FilledButton(
-                onPressed:
-                    widget.loading
-                        ? null
-                        : () {
-                          if (Uri.tryParse(_urlController.text) == null) {
-                            setState(() {
-                              _urlError = 'Invalid URL';
-                            });
-                          } else {
-                            setState(() {
-                              _urlError = null;
-                            });
-                            widget.onSubmitUrl(_urlController.text);
-                          }
-                        },
+                onPressed: widget.loading
+                    ? null
+                    : () {
+                        final uri = Uri.tryParse(_urlController.text);
+
+                        if (uri == null) {
+                          setState(() {
+                            _urlError = 'Invalid URL';
+                          });
+                          return;
+                        }
+
+                        setState(() {
+                          _urlError = null;
+                        });
+                        widget.onSubmitUrl(uri);
+                      },
                 child: const Text('Continue'),
               ),
             ],
@@ -208,14 +197,14 @@ class _FirstPageState extends State<_FirstPage> {
 }
 
 class _SecondPage extends StatefulWidget {
-  final Feed feed;
+  final FeedWithArticlesCompanion companion;
   final void Function() onGoBack;
   final void Function(String url, {String? title, String? description})
   onSubmit;
   final bool loading;
 
   const _SecondPage(
-    this.feed, {
+    this.companion, {
     required this.loading,
     required this.onGoBack,
     required this.onSubmit,
@@ -233,9 +222,11 @@ class _SecondPageState extends State<_SecondPage> {
   void initState() {
     super.initState();
     // Populate text fields with values from the feed
-    _titleController = TextEditingController(text: widget.feed.title);
+    _titleController = TextEditingController(
+      text: widget.companion.feed.title.value,
+    );
     _descriptionController = TextEditingController(
-      text: widget.feed.description,
+      text: widget.companion.feed.description.value,
     );
   }
 
@@ -248,9 +239,10 @@ class _SecondPageState extends State<_SecondPage> {
           child: Column(
             spacing: 16,
             children: [
-              SubscriptionThumbnail(widget.feed.thumbnail),
               TextField(
-                controller: TextEditingController(text: widget.feed.url),
+                controller: TextEditingController(
+                  text: widget.companion.feed.url.value,
+                ),
                 enabled: false,
                 decoration: const InputDecoration(
                   border: OutlineInputBorder(),
@@ -286,14 +278,13 @@ class _SecondPageState extends State<_SecondPage> {
                   FilledButton.icon(
                     icon: const Icon(Icons.add),
                     label: const Text('Add feed'),
-                    onPressed:
-                        widget.loading
-                            ? null
-                            : () => widget.onSubmit(
-                              widget.feed.url!,
-                              title: _titleController.text,
-                              description: _descriptionController.text,
-                            ),
+                    onPressed: widget.loading
+                        ? null
+                        : () => widget.onSubmit(
+                            widget.companion.feed.url.value,
+                            title: _titleController.text,
+                            description: _descriptionController.text,
+                          ),
                   ),
                 ],
               ),
