@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
+import 'package:rss_reader/services/refresh.dart';
+import 'package:rss_reader/services/remote_feed.dart';
+import 'package:rss_reader/task.dart';
 import 'package:rss_reader/database/database.dart';
 import 'package:rss_reader/pages/add_feed.dart';
 import 'package:rss_reader/pages/feed.dart';
@@ -9,34 +12,25 @@ import 'package:rss_reader/pages/subscriptions.dart';
 import 'package:rss_reader/repositories/article.dart';
 import 'package:rss_reader/repositories/feed.dart';
 import 'package:rss_reader/services/feed.dart';
+import 'package:workmanager/workmanager.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  Workmanager().initialize(callbackDispatcher);
 
   final db = Database();
 
-  runApp(
-    MyApp(
-      feedService: FeedService(db),
-      feedRepository: FeedRepository(db),
-      articleRepository: ArticleRepository(db),
-    ),
-  );
+  await RefreshService(db).registerPeriodicTask();
+
+  runApp(MyApp(db));
 }
 
 final GlobalKey<ScaffoldMessengerState> scaffoldMessengerKey = GlobalKey();
 
 class MyApp extends StatefulWidget {
-  final FeedService feedService;
-  final FeedRepository feedRepository;
-  final ArticleRepository articleRepository;
+  final Database db;
 
-  const MyApp({
-    super.key,
-    required this.feedService,
-    required this.feedRepository,
-    required this.articleRepository,
-  });
+  const MyApp(this.db, {super.key});
 
   @override
   State<MyApp> createState() => _MyAppState();
@@ -53,9 +47,13 @@ class _MyAppState extends State<MyApp> {
   Widget build(BuildContext context) {
     return MultiProvider(
       providers: [
-        Provider<FeedService>.value(value: widget.feedService),
-        Provider<FeedRepository>.value(value: widget.feedRepository),
-        Provider<ArticleRepository>.value(value: widget.articleRepository),
+        Provider<RemoteFeedService>(create: (_) => RemoteFeedService()),
+        Provider<RefreshService>(create: (_) => RefreshService(widget.db)),
+        Provider<FeedService>(create: (_) => FeedService(widget.db)),
+        Provider<FeedRepository>(create: (_) => FeedRepository(widget.db)),
+        Provider<ArticleRepository>(
+          create: (_) => ArticleRepository(widget.db),
+        ),
       ],
       child: MaterialApp(
         title: 'Flutter Demo',
@@ -129,12 +127,11 @@ class _IndexPageState extends State<IndexPage> {
           tooltip: 'Add a new feed',
           child: const Icon(Icons.add),
           onPressed: () async {
-            final feedService = context.read<FeedService>();
             final feed = await Navigator.push<Feed?>(
               context,
               MaterialPageRoute(
                 fullscreenDialog: true,
-                builder: (_) => AddNewFeedDialog(feedService),
+                builder: (_) => AddNewFeedDialog(),
               ),
             );
 

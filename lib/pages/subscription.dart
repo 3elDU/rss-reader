@@ -31,9 +31,7 @@ class _SubscriptionPageState extends State<SubscriptionPage> {
   void initState() {
     super.initState();
 
-    _articlesFuture = context.read<ArticleRepository>().articlesInFeed(
-      widget.feed.id,
-    );
+    _articlesFuture = context.read<ArticleRepository>().inFeed(widget.feed.id);
   }
 
   void _unsubscribe() async {

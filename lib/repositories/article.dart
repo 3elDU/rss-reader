@@ -7,6 +7,17 @@ class ArticleRepository {
 
   const ArticleRepository(this.db);
 
+  /// Add multiple articles to the corresponding feed
+  ///
+  /// [ArticlesCompanion.feed] will be populated accordingly.
+  Future<void> addBulk(Feed parent, List<ArticlesCompanion> articles) async {
+    await db.batch((batch) {
+      for (final article in articles) {
+        batch.insert(db.articles, article.copyWith(feed: Value(parent.id)));
+      }
+    });
+  }
+
   /// Takes an existing select() statement on articles table and performs
   /// a join to return each article with the corresponding feed
   Selectable<ArticleWithFeed> _join(
@@ -41,22 +52,29 @@ class ArticleRepository {
     ).get();
   }
 
+  /// Finds an article by its URL
+  Future<ArticleWithFeed?> findByUrl(String url) async {
+    return _join(
+      db.select(db.articles)..where((a) => a.url.equals(url)),
+    ).getSingleOrNull();
+  }
+
   /// Returns a list of articles in the given feed
-  Future<List<ArticleWithFeed>> articlesInFeed(int feedId) async {
+  Future<List<ArticleWithFeed>> inFeed(int feedId) async {
     return _join(
       _order(db.select(db.articles)..where((a) => a.feed.equals(feedId))),
     ).get();
   }
 
   /// Returns a list of all unread articles
-  Future<List<ArticleWithFeed>> unreadArticles() async {
+  Future<List<ArticleWithFeed>> unread() async {
     return _join(
       db.select(db.articles)..where((a) => a.status.equalsValue(.unread)),
     ).get();
   }
 
   /// Returns a list of all articles marked as snoozed (read later)
-  Future<List<ArticleWithFeed>> snoozedArticles() async {
+  Future<List<ArticleWithFeed>> snoozed() async {
     return _join(
       _order(
         db.select(db.articles)..where((a) => a.status.equalsValue(.snoozed)),
