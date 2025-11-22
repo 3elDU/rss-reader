@@ -41,7 +41,7 @@ class FeedWithArticlesCompanion {
             feed: 0,
             url: item.link!,
             title: item.title!,
-            thumbnailUrl: Value(item.content?.images.first),
+            thumbnailUrl: Value(item.content?.images.firstOrNull),
             publishedAt: parseDateTime(item.pubDate) ?? DateTime.now(),
           ),
         )

@@ -23,10 +23,27 @@ class FeedRepository {
         });
   }
 
+  /// Takes an existing select() statement, and orders it by article publish
+  /// date from newest to oldest
+  _order(SimpleSelectStatement<$ArticlesTable, Article> q) {
+    return (q..orderBy([(a) => OrderingTerm.desc(a.publishedAt)]));
+  }
+
+  /// Returns articles containing the supplied text in their title or descriptions
+  Future<List<ArticleWithFeed>> search(String search) async {
+    return _join(
+      _order(
+        db.select(db.articles)..where(
+          (a) => a.title.contains(search) | a.description.contains(search),
+        ),
+      ),
+    ).get();
+  }
+
   /// Returns a list of articles in the given feed
   Future<List<ArticleWithFeed>> articlesInFeed(int feedId) async {
     return _join(
-      db.select(db.articles)..where((a) => a.feed.equals(feedId)),
+      _order(db.select(db.articles)..where((a) => a.feed.equals(feedId))),
     ).get();
   }
 
@@ -40,7 +57,9 @@ class FeedRepository {
   /// Returns a list of all articles marked as snoozed (read later)
   Future<List<ArticleWithFeed>> snoozedArticles() async {
     return _join(
-      db.select(db.articles)..where((a) => a.status.equalsValue(.snoozed)),
+      _order(
+        db.select(db.articles)..where((a) => a.status.equalsValue(.snoozed)),
+      ),
     ).get();
   }
 

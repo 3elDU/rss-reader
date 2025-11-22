@@ -55,4 +55,7 @@ class FeedService {
 
     return feed;
   }
+
+  /// Opens article in user's default browser
+  Future<void> openArticle(Article article) async {}
 }
