@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
+import 'package:rss_reader/services/article.dart';
 import 'package:rss_reader/services/refresh.dart';
 import 'package:rss_reader/services/remote_feed.dart';
 import 'package:rss_reader/task.dart';
@@ -50,17 +51,18 @@ class _MyAppState extends State<MyApp> {
   Widget build(BuildContext context) {
     return MultiProvider(
       providers: [
-        Provider<RemoteFeedService>(create: (_) => RemoteFeedService()),
-        Provider<RefreshService>(
-          create: (_) => RefreshService(widget.db, widget.prefs),
-        ),
-        Provider<FeedService>(create: (_) => FeedService(widget.db)),
         Provider<FeedRepository>(
           create: (_) => FeedRepository(widget.db, widget.prefs),
         ),
         Provider<ArticleRepository>(
           create: (_) => ArticleRepository(widget.db),
         ),
+        Provider<RemoteFeedService>(create: (_) => RemoteFeedService()),
+        Provider<RefreshService>(
+          create: (_) => RefreshService(widget.db, widget.prefs),
+        ),
+        Provider<FeedService>(create: (_) => FeedService(widget.db)),
+        Provider<ArticleService>(create: (_) => ArticleService(widget.db)),
       ],
       child: MaterialApp(
         title: 'Flutter Demo',

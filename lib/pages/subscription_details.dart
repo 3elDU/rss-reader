@@ -9,22 +9,25 @@ import 'package:rss_reader/widgets/article/card.dart';
 import 'package:rss_reader/widgets/article/skeleton.dart';
 
 /// Page showing subscription info, as well as all articles inside it
-class SubscriptionPage extends StatefulWidget {
+class SubscriptionDetailsPage extends StatefulWidget {
   final Feed feed;
 
-  const SubscriptionPage(this.feed, {super.key});
+  const SubscriptionDetailsPage(this.feed, {super.key});
 
   static void open(BuildContext context, Feed subscription) {
     Navigator.of(context).push(
-      MaterialPageRoute(builder: (context) => SubscriptionPage(subscription)),
+      MaterialPageRoute(
+        builder: (context) => SubscriptionDetailsPage(subscription),
+      ),
     );
   }
 
   @override
-  State<SubscriptionPage> createState() => _SubscriptionPageState();
+  State<SubscriptionDetailsPage> createState() =>
+      _SubscriptionDetailsPageState();
 }
 
-class _SubscriptionPageState extends State<SubscriptionPage> {
+class _SubscriptionDetailsPageState extends State<SubscriptionDetailsPage> {
   late Future<List<ArticleWithFeed>> _articlesFuture;
 
   @override

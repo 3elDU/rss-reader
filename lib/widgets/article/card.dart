@@ -1,27 +1,34 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:provider/provider.dart';
 import 'package:rss_reader/database/database.dart';
 import 'package:rss_reader/database/dataclasses.dart';
 import 'package:rss_reader/main.dart';
-import 'package:rss_reader/pages/subscription.dart';
+import 'package:rss_reader/pages/article_details.dart';
+import 'package:rss_reader/pages/subscription_details.dart';
 import 'package:rss_reader/providers/article_list.dart';
+import 'package:rss_reader/services/article.dart';
 import 'package:rss_reader/widgets/error.dart';
 import 'package:timeago/timeago.dart' as timeago;
-import 'package:url_launcher/url_launcher.dart';
 
 class ArticleCard extends StatelessWidget {
   final ArticleWithFeed model;
 
-  /// Whether to enable the clickable header, that navigates to subscription
-  /// page
+  /// Whether tapping on the card should open the article details page
+  final bool clickable;
+
+  /// Whether tapping on the header should open the subscriptions details page
   final bool clickableHeader;
 
-  const ArticleCard(this.model, {super.key, this.clickableHeader = true});
+  const ArticleCard(
+    this.model, {
+    super.key,
+    this.clickable = true,
+    this.clickableHeader = true,
+  });
 
   Widget _buildTitle(BuildContext context) {
-    return DefaultTextStyle.merge(
+    final widget = DefaultTextStyle.merge(
       style: Theme.of(context).textTheme.bodySmall!.copyWith(
         color: Theme.of(context).colorScheme.onSurfaceVariant,
       ),
@@ -45,18 +52,27 @@ class ArticleCard extends StatelessWidget {
         ],
       ),
     );
+
+    // Wrap title in gesture detector that opens the subscription page on tap
+    if (clickableHeader) {
+      return GestureDetector(
+        onTap: () => SubscriptionDetailsPage.open(context, model.feed),
+        child: widget,
+      );
+    } else {
+      return widget;
+    }
   }
 
   /// [ArticleListModel] is required to mark article as read
   Future<void> _openInBrowser(BuildContext context) async {
-    if (!(await launchUrl(
-      Uri.parse(model.article.url),
-      mode: LaunchMode.externalApplication,
-    ))) {
-      // If opening a web browser failed, copy article URL to the clipboard
-      await Clipboard.setData(
-        ClipboardData(text: model.article.url.toString()),
-      );
+    final opened = await context.read<ArticleService>().openInBrowser(
+      model.article,
+    );
+
+    print(opened);
+
+    if (!opened) {
       scaffoldMessengerKey.currentState!.showSnackBar(
         const SnackBar(
           content: Text(
@@ -139,15 +155,9 @@ class ArticleCard extends StatelessWidget {
       ),
     );
 
-    if (clickableHeader) {
+    if (clickable) {
       return GestureDetector(
-        onTap: () {
-          Navigator.of(context).push(
-            MaterialPageRoute(
-              builder: (context) => SubscriptionPage(model.feed),
-            ),
-          );
-        },
+        onTap: () => ArticleDetailsPage.open(context, model),
         child: card,
       );
     } else {

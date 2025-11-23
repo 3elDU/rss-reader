@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:rss_reader/database/database.dart';
-import 'package:rss_reader/pages/subscription.dart';
+import 'package:rss_reader/pages/subscription_details.dart';
 import 'package:rss_reader/repositories/feed.dart';
 import 'package:rss_reader/widgets/error.dart';
 import 'package:rss_reader/widgets/search.dart';
@@ -33,7 +33,7 @@ class _SubscriptionsPageState extends State<SubscriptionsPage> {
           maxLines: 3,
           overflow: .ellipsis,
         ),
-        onTap: () => SubscriptionPage.open(context, feeds[index]),
+        onTap: () => SubscriptionDetailsPage.open(context, feeds[index]),
       ),
     );
   }

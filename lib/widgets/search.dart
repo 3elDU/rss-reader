@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:rss_reader/pages/subscription.dart';
+import 'package:rss_reader/pages/article_details.dart';
+import 'package:rss_reader/pages/subscription_details.dart';
 import 'package:rss_reader/repositories/article.dart';
 
 class ArticleSearchBar extends StatefulWidget {
@@ -43,13 +44,7 @@ class _ArticleSearchBarState extends State<ArticleSearchBar> {
               overflow: .ellipsis,
             ),
             subtitle: Text(results[index].feed.title),
-            onTap: () {
-              Navigator.of(context).push(
-                MaterialPageRoute(
-                  builder: (context) => SubscriptionPage(results[index].feed),
-                ),
-              );
-            },
+            onTap: () => ArticleDetailsPage.open(context, results[index]),
           ),
         );
       },
