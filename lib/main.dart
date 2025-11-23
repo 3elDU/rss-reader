@@ -12,6 +12,7 @@ import 'package:rss_reader/pages/subscriptions.dart';
 import 'package:rss_reader/repositories/article.dart';
 import 'package:rss_reader/repositories/feed.dart';
 import 'package:rss_reader/services/feed.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:workmanager/workmanager.dart';
 
 void main() async {
@@ -19,18 +20,20 @@ void main() async {
   Workmanager().initialize(callbackDispatcher);
 
   final db = Database();
+  final prefs = SharedPreferencesAsync();
 
-  await RefreshService(db).registerPeriodicTask();
+  await RefreshService(db, prefs).registerPeriodicTask();
 
-  runApp(MyApp(db));
+  runApp(MyApp(db, prefs));
 }
 
 final GlobalKey<ScaffoldMessengerState> scaffoldMessengerKey = GlobalKey();
 
 class MyApp extends StatefulWidget {
   final Database db;
+  final SharedPreferencesAsync prefs;
 
-  const MyApp(this.db, {super.key});
+  const MyApp(this.db, this.prefs, {super.key});
 
   @override
   State<MyApp> createState() => _MyAppState();
@@ -48,9 +51,13 @@ class _MyAppState extends State<MyApp> {
     return MultiProvider(
       providers: [
         Provider<RemoteFeedService>(create: (_) => RemoteFeedService()),
-        Provider<RefreshService>(create: (_) => RefreshService(widget.db)),
+        Provider<RefreshService>(
+          create: (_) => RefreshService(widget.db, widget.prefs),
+        ),
         Provider<FeedService>(create: (_) => FeedService(widget.db)),
-        Provider<FeedRepository>(create: (_) => FeedRepository(widget.db)),
+        Provider<FeedRepository>(
+          create: (_) => FeedRepository(widget.db, widget.prefs),
+        ),
         Provider<ArticleRepository>(
           create: (_) => ArticleRepository(widget.db),
         ),
