@@ -13,6 +13,7 @@ class Feeds extends Table with IdAndTime {
   late final title = text()();
   late final url = text().unique()();
   late final description = text().nullable()();
+  late final updatedAt = dateTime().withDefault(currentDateAndTime)();
 }
 
 enum ArticleStatus { unread, read, snoozed }

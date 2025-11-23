@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:rss_reader/database/companions.dart';
 import 'package:rss_reader/services/feed.dart';
+import 'package:rss_reader/services/remote_feed.dart';
 import 'package:rss_reader/widgets/error.dart';
 
 class AddNewFeedDialog extends StatefulWidget {
-  final FeedService feedService;
-
-  const AddNewFeedDialog(this.feedService, {super.key});
+  const AddNewFeedDialog({super.key});
 
   @override
   State<AddNewFeedDialog> createState() => _AddNewFeedDialogState();
@@ -40,7 +40,7 @@ class _AddNewFeedDialogState extends State<AddNewFeedDialog> {
 
   Future<void> fetchFeedInfo(Uri url) async {
     try {
-      final future = widget.feedService.fetchRemoteFeedInfo(url);
+      final future = context.read<RemoteFeedService>().get(url);
       setState(() {
         _requestFuture = future;
       });
@@ -70,7 +70,7 @@ class _AddNewFeedDialogState extends State<AddNewFeedDialog> {
     String? description,
   }) async {
     try {
-      final future = widget.feedService.subscribeToFeed(
+      final future = context.read<FeedService>().subscribeToFeed(
         _feed!,
         title: title,
         description: description,

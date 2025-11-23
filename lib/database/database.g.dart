@@ -63,6 +63,18 @@ class $FeedsTable extends Feeds with TableInfo<$FeedsTable, Feed> {
     type: DriftSqlType.string,
     requiredDuringInsert: false,
   );
+  static const VerificationMeta _updatedAtMeta = const VerificationMeta(
+    'updatedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> updatedAt = GeneratedColumn<DateTime>(
+    'updated_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+    defaultValue: currentDateAndTime,
+  );
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -70,6 +82,7 @@ class $FeedsTable extends Feeds with TableInfo<$FeedsTable, Feed> {
     title,
     url,
     description,
+    updatedAt,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -117,6 +130,12 @@ class $FeedsTable extends Feeds with TableInfo<$FeedsTable, Feed> {
         ),
       );
     }
+    if (data.containsKey('updated_at')) {
+      context.handle(
+        _updatedAtMeta,
+        updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta),
+      );
+    }
     return context;
   }
 
@@ -146,6 +165,10 @@ class $FeedsTable extends Feeds with TableInfo<$FeedsTable, Feed> {
         DriftSqlType.string,
         data['${effectivePrefix}description'],
       ),
+      updatedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}updated_at'],
+      )!,
     );
   }
 
@@ -161,12 +184,14 @@ class Feed extends DataClass implements Insertable<Feed> {
   final String title;
   final String url;
   final String? description;
+  final DateTime updatedAt;
   const Feed({
     required this.id,
     required this.createdAt,
     required this.title,
     required this.url,
     this.description,
+    required this.updatedAt,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -178,6 +203,7 @@ class Feed extends DataClass implements Insertable<Feed> {
     if (!nullToAbsent || description != null) {
       map['description'] = Variable<String>(description);
     }
+    map['updated_at'] = Variable<DateTime>(updatedAt);
     return map;
   }
 
@@ -190,6 +216,7 @@ class Feed extends DataClass implements Insertable<Feed> {
       description: description == null && nullToAbsent
           ? const Value.absent()
           : Value(description),
+      updatedAt: Value(updatedAt),
     );
   }
 
@@ -204,6 +231,7 @@ class Feed extends DataClass implements Insertable<Feed> {
       title: serializer.fromJson<String>(json['title']),
       url: serializer.fromJson<String>(json['url']),
       description: serializer.fromJson<String?>(json['description']),
+      updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
     );
   }
   @override
@@ -215,6 +243,7 @@ class Feed extends DataClass implements Insertable<Feed> {
       'title': serializer.toJson<String>(title),
       'url': serializer.toJson<String>(url),
       'description': serializer.toJson<String?>(description),
+      'updatedAt': serializer.toJson<DateTime>(updatedAt),
     };
   }
 
@@ -224,12 +253,14 @@ class Feed extends DataClass implements Insertable<Feed> {
     String? title,
     String? url,
     Value<String?> description = const Value.absent(),
+    DateTime? updatedAt,
   }) => Feed(
     id: id ?? this.id,
     createdAt: createdAt ?? this.createdAt,
     title: title ?? this.title,
     url: url ?? this.url,
     description: description.present ? description.value : this.description,
+    updatedAt: updatedAt ?? this.updatedAt,
   );
   Feed copyWithCompanion(FeedsCompanion data) {
     return Feed(
@@ -240,6 +271,7 @@ class Feed extends DataClass implements Insertable<Feed> {
       description: data.description.present
           ? data.description.value
           : this.description,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
     );
   }
 
@@ -250,13 +282,15 @@ class Feed extends DataClass implements Insertable<Feed> {
           ..write('createdAt: $createdAt, ')
           ..write('title: $title, ')
           ..write('url: $url, ')
-          ..write('description: $description')
+          ..write('description: $description, ')
+          ..write('updatedAt: $updatedAt')
           ..write(')'))
         .toString();
   }
 
   @override
-  int get hashCode => Object.hash(id, createdAt, title, url, description);
+  int get hashCode =>
+      Object.hash(id, createdAt, title, url, description, updatedAt);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -265,7 +299,8 @@ class Feed extends DataClass implements Insertable<Feed> {
           other.createdAt == this.createdAt &&
           other.title == this.title &&
           other.url == this.url &&
-          other.description == this.description);
+          other.description == this.description &&
+          other.updatedAt == this.updatedAt);
 }
 
 class FeedsCompanion extends UpdateCompanion<Feed> {
@@ -274,12 +309,14 @@ class FeedsCompanion extends UpdateCompanion<Feed> {
   final Value<String> title;
   final Value<String> url;
   final Value<String?> description;
+  final Value<DateTime> updatedAt;
   const FeedsCompanion({
     this.id = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.title = const Value.absent(),
     this.url = const Value.absent(),
     this.description = const Value.absent(),
+    this.updatedAt = const Value.absent(),
   });
   FeedsCompanion.insert({
     this.id = const Value.absent(),
@@ -287,6 +324,7 @@ class FeedsCompanion extends UpdateCompanion<Feed> {
     required String title,
     required String url,
     this.description = const Value.absent(),
+    this.updatedAt = const Value.absent(),
   }) : title = Value(title),
        url = Value(url);
   static Insertable<Feed> custom({
@@ -295,6 +333,7 @@ class FeedsCompanion extends UpdateCompanion<Feed> {
     Expression<String>? title,
     Expression<String>? url,
     Expression<String>? description,
+    Expression<DateTime>? updatedAt,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
@@ -302,6 +341,7 @@ class FeedsCompanion extends UpdateCompanion<Feed> {
       if (title != null) 'title': title,
       if (url != null) 'url': url,
       if (description != null) 'description': description,
+      if (updatedAt != null) 'updated_at': updatedAt,
     });
   }
 
@@ -311,6 +351,7 @@ class FeedsCompanion extends UpdateCompanion<Feed> {
     Value<String>? title,
     Value<String>? url,
     Value<String?>? description,
+    Value<DateTime>? updatedAt,
   }) {
     return FeedsCompanion(
       id: id ?? this.id,
@@ -318,6 +359,7 @@ class FeedsCompanion extends UpdateCompanion<Feed> {
       title: title ?? this.title,
       url: url ?? this.url,
       description: description ?? this.description,
+      updatedAt: updatedAt ?? this.updatedAt,
     );
   }
 
@@ -339,6 +381,9 @@ class FeedsCompanion extends UpdateCompanion<Feed> {
     if (description.present) {
       map['description'] = Variable<String>(description.value);
     }
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<DateTime>(updatedAt.value);
+    }
     return map;
   }
 
@@ -349,7 +394,8 @@ class FeedsCompanion extends UpdateCompanion<Feed> {
           ..write('createdAt: $createdAt, ')
           ..write('title: $title, ')
           ..write('url: $url, ')
-          ..write('description: $description')
+          ..write('description: $description, ')
+          ..write('updatedAt: $updatedAt')
           ..write(')'))
         .toString();
   }
@@ -943,6 +989,7 @@ typedef $$FeedsTableCreateCompanionBuilder =
       required String title,
       required String url,
       Value<String?> description,
+      Value<DateTime> updatedAt,
     });
 typedef $$FeedsTableUpdateCompanionBuilder =
     FeedsCompanion Function({
@@ -951,6 +998,7 @@ typedef $$FeedsTableUpdateCompanionBuilder =
       Value<String> title,
       Value<String> url,
       Value<String?> description,
+      Value<DateTime> updatedAt,
     });
 
 final class $$FeedsTableReferences
@@ -1007,6 +1055,11 @@ class $$FeedsTableFilterComposer extends Composer<_$Database, $FeedsTable> {
 
   ColumnFilters<String> get description => $composableBuilder(
     column: $table.description,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -1068,6 +1121,11 @@ class $$FeedsTableOrderingComposer extends Composer<_$Database, $FeedsTable> {
     column: $table.description,
     builder: (column) => ColumnOrderings(column),
   );
+
+  ColumnOrderings<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
 class $$FeedsTableAnnotationComposer extends Composer<_$Database, $FeedsTable> {
@@ -1094,6 +1152,9 @@ class $$FeedsTableAnnotationComposer extends Composer<_$Database, $FeedsTable> {
     column: $table.description,
     builder: (column) => column,
   );
+
+  GeneratedColumn<DateTime> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
 
   Expression<T> articlesRefs<T extends Object>(
     Expression<T> Function($$ArticlesTableAnnotationComposer a) f,
@@ -1154,12 +1215,14 @@ class $$FeedsTableTableManager
                 Value<String> title = const Value.absent(),
                 Value<String> url = const Value.absent(),
                 Value<String?> description = const Value.absent(),
+                Value<DateTime> updatedAt = const Value.absent(),
               }) => FeedsCompanion(
                 id: id,
                 createdAt: createdAt,
                 title: title,
                 url: url,
                 description: description,
+                updatedAt: updatedAt,
               ),
           createCompanionCallback:
               ({
@@ -1168,12 +1231,14 @@ class $$FeedsTableTableManager
                 required String title,
                 required String url,
                 Value<String?> description = const Value.absent(),
+                Value<DateTime> updatedAt = const Value.absent(),
               }) => FeedsCompanion.insert(
                 id: id,
                 createdAt: createdAt,
                 title: title,
                 url: url,
                 description: description,
+                updatedAt: updatedAt,
               ),
           withReferenceMapper: (p0) => p0
               .map(

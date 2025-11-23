@@ -18,11 +18,11 @@ class _ReadLaterPageState extends State<ReadLaterPage> {
   void initState() {
     super.initState();
 
-    _articlesFuture = context.read<ArticleRepository>().snoozedArticles();
+    _articlesFuture = context.read<ArticleRepository>().snoozed();
   }
 
   Future<void> _refresh() {
-    final future = context.read<ArticleRepository>().snoozedArticles();
+    final future = context.read<ArticleRepository>().snoozed();
     setState(() {
       _articlesFuture = future;
     });
