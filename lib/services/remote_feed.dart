@@ -19,6 +19,7 @@ class RemoteFeedService {
             feed: 0,
             url: item.link!,
             title: item.title!,
+            description: Value(item.description),
             publishedAt: parseDateTime(item.dc?.date) ?? DateTime.now(),
           ),
         )
@@ -43,6 +44,7 @@ class RemoteFeedService {
             feed: 0,
             url: item.link!,
             title: item.title!,
+            description: Value(item.description),
             thumbnailUrl: Value(item.content?.images.firstOrNull),
             publishedAt: parseDateTime(item.pubDate) ?? DateTime.now(),
           ),
@@ -68,6 +70,7 @@ class RemoteFeedService {
             feed: 0,
             url: item.links.first.href!,
             title: item.title!,
+            description: Value(item.summary),
             thumbnailUrl: Value(item.media?.thumbnails.firstOrNull?.url),
             publishedAt: parseDateTime(item.published) ?? DateTime.now(),
           ),
