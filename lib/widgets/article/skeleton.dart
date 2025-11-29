@@ -24,32 +24,3 @@ class ArticleCardSkeleton extends StatelessWidget {
     );
   }
 }
-
-/// A wrapper around [ArticleCardSkeleton], showing a [SliverList] with a
-/// couple of skeleton elements.
-class ArticleSkeletonSliverList extends StatelessWidget {
-  /// Whether to apply padding around the SliverList.
-  /// False by default, because often there's already a padding
-  /// applied to the page.
-  final EdgeInsets? padding;
-
-  const ArticleSkeletonSliverList({
-    super.key,
-    this.padding = const EdgeInsets.all(16.0),
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final list = SliverList.separated(
-      itemCount: 10,
-      itemBuilder: (_, index) => ArticleCardSkeleton(high: index.isEven),
-      separatorBuilder: (_, _) => const SizedBox(height: 10),
-    );
-
-    if (padding != null) {
-      return SliverPadding(padding: padding!, sliver: list);
-    } else {
-      return list;
-    }
-  }
-}

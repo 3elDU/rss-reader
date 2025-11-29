@@ -37,7 +37,7 @@ class ArticleDetailsPage extends StatelessWidget {
               const SizedBox(height: 12),
               // Feed title
               Text(feed.title, style: Theme.of(context).textTheme.titleSmall),
-              const SizedBox(height: 12),
+              const SizedBox(height: 8),
               // New badge, Published date
               Row(
                 children: [

@@ -1,3 +1,4 @@
+import 'package:intl/intl.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:provider/provider.dart';
@@ -6,7 +7,7 @@ import 'package:rss_reader/database/dataclasses.dart';
 import 'package:rss_reader/main.dart';
 import 'package:rss_reader/pages/article_details.dart';
 import 'package:rss_reader/pages/subscription_details.dart';
-import 'package:rss_reader/providers/article_list.dart';
+import 'package:rss_reader/providers/article.dart';
 import 'package:rss_reader/services/article.dart';
 import 'package:rss_reader/widgets/error.dart';
 import 'package:timeago/timeago.dart' as timeago;
@@ -41,10 +42,9 @@ class ArticleCard extends StatelessWidget {
           ],
           Expanded(
             child: Tooltip(
-              // TODO: format this to user's locale
-              message: model.article.createdAt.toString(),
+              message: DateFormat.yMMMMd().format(model.article.publishedAt),
               child: Text(
-                '${model.feed.title} • ${timeago.format(model.article.createdAt)}',
+                '${model.feed.title} • ${timeago.format(model.article.publishedAt)}',
                 overflow: .ellipsis,
               ),
             ),

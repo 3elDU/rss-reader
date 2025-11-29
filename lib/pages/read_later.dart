@@ -1,38 +1,24 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:rss_reader/database/dataclasses.dart';
+import 'package:rss_reader/providers/article.dart';
 import 'package:rss_reader/repositories/article.dart';
 import 'package:rss_reader/widgets/article/list.dart';
 
-class ReadLaterPage extends StatefulWidget {
-  const ReadLaterPage({super.key});
+class ReadLaterPage extends StatelessWidget {
+  final ArticleQueryBuilder initialFilters = ArticleQueryBuilder()..snoozed();
 
-  @override
-  State<ReadLaterPage> createState() => _ReadLaterPageState();
-}
-
-class _ReadLaterPageState extends State<ReadLaterPage> {
-  late Future<List<ArticleWithFeed>> _articlesFuture;
-
-  @override
-  void initState() {
-    super.initState();
-
-    _articlesFuture = context.read<ArticleRepository>().snoozed();
-  }
-
-  Future<void> _refresh() {
-    final future = context.read<ArticleRepository>().snoozed();
-    setState(() {
-      _articlesFuture = future;
-    });
-    return future;
-  }
+  ReadLaterPage({super.key});
 
   @override
   Widget build(BuildContext context) {
     return SafeArea(
-      child: ArticleList(future: _articlesFuture, onRefresh: _refresh),
+      child: ChangeNotifierProvider<ArticleListModel>(
+        create: (_) => ArticleListModel(
+          filters: initialFilters,
+          repo: context.read<ArticleRepository>(),
+        ),
+        child: ArticleListView(),
+      ),
     );
   }
 }

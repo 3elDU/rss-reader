@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
+import 'package:rss_reader/providers/feed.dart';
 import 'package:rss_reader/services/article.dart';
 import 'package:rss_reader/services/refresh.dart';
 import 'package:rss_reader/services/remote_feed.dart';
@@ -63,6 +64,9 @@ class _MyAppState extends State<MyApp> {
         ),
         Provider<FeedService>(create: (_) => FeedService(widget.db)),
         Provider<ArticleService>(create: (_) => ArticleService(widget.db)),
+        ChangeNotifierProvider<FeedListModel>(
+          create: (_) => FeedListModel(FeedRepository(widget.db, widget.prefs)),
+        ),
       ],
       child: MaterialApp(
         title: 'Flutter Demo',
@@ -115,13 +119,13 @@ class _IndexPageState extends State<IndexPage> {
   Widget pageForDestination() {
     switch (_currentDestination) {
       case 0:
-        return const FeedPage();
+        return FeedPage();
       case 1:
-        return const ReadLaterPage();
+        return ReadLaterPage();
       case 2:
         return const SubscriptionsPage();
       default:
-        return const FeedPage();
+        return FeedPage();
     }
   }
 

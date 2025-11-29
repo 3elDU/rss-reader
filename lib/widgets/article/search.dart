@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:rss_reader/pages/article_details.dart';
-import 'package:rss_reader/pages/subscription_details.dart';
 import 'package:rss_reader/repositories/article.dart';
 
 class ArticleSearchBar extends StatefulWidget {
-  const ArticleSearchBar({super.key});
+  final bool enabled;
+
+  const ArticleSearchBar({super.key, this.enabled = true});
 
   @override
   State<ArticleSearchBar> createState() => _ArticleSearchBarState();
@@ -24,6 +25,7 @@ class _ArticleSearchBarState extends State<ArticleSearchBar> {
   @override
   Widget build(BuildContext context) {
     return SearchAnchor.bar(
+      enabled: widget.enabled,
       searchController: _searchController,
       barElevation: WidgetStatePropertyAll(0),
       barLeading: const Icon(Icons.search),

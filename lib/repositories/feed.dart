@@ -39,8 +39,8 @@ class FeedRepository {
     _prefs.setInt(_updatedAtPrefsKey, DateTime.now().millisecondsSinceEpoch);
   }
 
-  /// Tries to read updated at date from shared preferences
-  Future<DateTime?> _readUpdatedAt() async {
+  /// Returns a date, when the articles were refetched
+  Future<DateTime?> updatedAt() async {
     if (await _prefs.containsKey(_updatedAtPrefsKey)) {
       return DateTime.fromMillisecondsSinceEpoch(
         (await _prefs.getInt(_updatedAtPrefsKey))!,
@@ -53,12 +53,12 @@ class FeedRepository {
   /// Returns when the "updated at" date changes
   Future<void> waitForGlobalUpdated() async {
     DateTime initialUpdatedAt =
-        await _readUpdatedAt() ?? DateTime.fromMillisecondsSinceEpoch(0);
+        await updatedAt() ?? DateTime.fromMillisecondsSinceEpoch(0);
 
     // Query the "updatedAt" key repeatedly until it has changed
     return Future(() async {
       while (true) {
-        final newUpdatedAt = await _readUpdatedAt();
+        final newUpdatedAt = await updatedAt();
 
         if (newUpdatedAt != null && newUpdatedAt.isAfter(initialUpdatedAt)) {
           return;
@@ -68,5 +68,12 @@ class FeedRepository {
         await Future.delayed(const Duration(milliseconds: 500));
       }
     }).timeout(const Duration(minutes: 5));
+  }
+
+  /// Streams any updates to the [Feeds] table.
+  ///
+  /// Returns a full list of feeds each time a change is detected
+  Stream<List<Feed>> streamUpdates() {
+    return _db.select(_db.feeds).watch();
   }
 }
