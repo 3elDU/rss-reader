@@ -5,19 +5,18 @@ import 'package:rss_reader/database/database.dart';
 import 'package:rss_reader/database/dataclasses.dart';
 
 mixin _ArticleQueryHelper {
-  Database get _db;
-
   /// Takes an existing select() statement on articles table and performs
   /// a join to return each article with the corresponding feed
   Selectable<ArticleWithFeed> _join(
+    Database db,
     SimpleSelectStatement<$ArticlesTable, Article> q,
   ) {
     return q
-        .join([innerJoin(_db.feeds, _db.feeds.id.equalsExp(_db.articles.feed))])
+        .join([innerJoin(db.feeds, db.feeds.id.equalsExp(db.articles.feed))])
         .map((row) {
           return ArticleWithFeed(
-            row.readTable(_db.articles),
-            row.readTable(_db.feeds),
+            row.readTable(db.articles),
+            row.readTable(db.feeds),
           );
         });
   }
@@ -57,9 +56,6 @@ class DateFilter {
 /// Allows to query articles with filters and ordering applied,
 /// using a builder pattern style.
 class ArticleQueryBuilder with _ArticleQueryHelper {
-  @override
-  late final Database _db;
-
   ArticleQueryBuilder();
 
   /// Creates an instance with all filters and ordering copied from another instance
@@ -165,10 +161,7 @@ class ArticleQueryBuilder with _ArticleQueryHelper {
 
   /// Returns the list of articles with sorting and ordering applied
   Future<List<ArticleWithFeed>> run(ArticleRepository repo) async {
-    // Allow the mixin to work
-    _db = repo._db;
-
-    final query = _db.select(_db.articles);
+    final query = repo._db.select(repo._db.articles);
 
     // Ordering
     query.orderBy([
@@ -213,12 +206,11 @@ class ArticleQueryBuilder with _ArticleQueryHelper {
       });
     }
 
-    return _join(query).get();
+    return _join(repo._db, query).get();
   }
 }
 
 class ArticleRepository with _ArticleQueryHelper {
-  @override
   final Database _db;
 
   const ArticleRepository(this._db);
@@ -237,6 +229,7 @@ class ArticleRepository with _ArticleQueryHelper {
   /// Returns articles containing the supplied text in their title or descriptions
   Future<List<ArticleWithFeed>> search(String search) async {
     return _join(
+      _db,
       _order(
         _db.select(_db.articles)..where(
           (a) => a.title.contains(search) | a.description.contains(search),
@@ -248,6 +241,7 @@ class ArticleRepository with _ArticleQueryHelper {
   /// Finds an article by its URL
   Future<ArticleWithFeed?> findByUrl(String url) async {
     return _join(
+      _db,
       _db.select(_db.articles)..where((a) => a.url.equals(url)),
     ).getSingleOrNull();
   }
@@ -255,6 +249,7 @@ class ArticleRepository with _ArticleQueryHelper {
   /// Returns a list of articles in the given feed
   Future<List<ArticleWithFeed>> inFeed(int feedId) async {
     return _join(
+      _db,
       _order(_db.select(_db.articles)..where((a) => a.feed.equals(feedId))),
     ).get();
   }
@@ -262,6 +257,7 @@ class ArticleRepository with _ArticleQueryHelper {
   /// Returns a list of all unread articles
   Future<List<ArticleWithFeed>> unread() async {
     return _join(
+      _db,
       _db.select(_db.articles)..where((a) => a.status.equalsValue(.unread)),
     ).get();
   }
@@ -269,6 +265,7 @@ class ArticleRepository with _ArticleQueryHelper {
   /// Returns a list of all articles marked as snoozed (read later)
   Future<List<ArticleWithFeed>> snoozed() async {
     return _join(
+      _db,
       _order(
         _db.select(_db.articles)..where((a) => a.status.equalsValue(.snoozed)),
       ),

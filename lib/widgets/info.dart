@@ -21,7 +21,7 @@ class InfoStrip extends StatelessWidget {
 
     return AnimatedOpacity(
       opacity: loading ? 0.0 : 1.0,
-      duration: const Duration(milliseconds: 200),
+      duration: Durations.short2,
       child: Row(
         mainAxisAlignment: .spaceBetween,
         children: [
