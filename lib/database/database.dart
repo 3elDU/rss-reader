@@ -30,7 +30,15 @@ class Articles extends Table with IdAndTime {
   late final publishedAt = dateTime()();
 }
 
-@DriftDatabase(tables: [Feeds, Articles])
+class Tags extends Table with IdAndTime {
+  late final title = text()();
+  late final description = text().nullable()();
+  late final icon = integer().nullable()();
+  late final background = integer()();
+  late final foreground = integer()();
+}
+
+@DriftDatabase(tables: [Feeds, Articles, Tags])
 class Database extends _$Database {
   Database([QueryExecutor? executor]) : super(executor ?? _openConnection());
 

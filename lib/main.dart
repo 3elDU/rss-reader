@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:rss_reader/providers/feed.dart';
+import 'package:rss_reader/repositories/tag.dart';
 import 'package:rss_reader/services/article.dart';
 import 'package:rss_reader/services/refresh.dart';
 import 'package:rss_reader/services/remote_feed.dart';
@@ -14,6 +15,7 @@ import 'package:rss_reader/pages/subscriptions.dart';
 import 'package:rss_reader/repositories/article.dart';
 import 'package:rss_reader/repositories/feed.dart';
 import 'package:rss_reader/services/feed.dart';
+import 'package:rss_reader/widgets/drawer.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:workmanager/workmanager.dart';
 
@@ -58,6 +60,7 @@ class _MyAppState extends State<MyApp> {
         Provider<ArticleRepository>(
           create: (_) => ArticleRepository(widget.db),
         ),
+        Provider<TagRepository>(create: (_) => TagRepository(widget.db)),
         Provider<RemoteFeedService>(create: (_) => RemoteFeedService()),
         Provider<RefreshService>(
           create: (_) => RefreshService(widget.db, widget.prefs),
@@ -136,6 +139,7 @@ class _IndexPageState extends State<IndexPage> {
           ? SystemUiOverlayStyle.dark
           : SystemUiOverlayStyle.light,
       child: Scaffold(
+        drawer: const FoxDrawer(),
         floatingActionButton: FloatingActionButton(
           tooltip: 'Add a new feed',
           child: const Icon(Icons.add),

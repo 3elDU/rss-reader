@@ -28,7 +28,16 @@ class _ArticleSearchBarState extends State<ArticleSearchBar> {
       enabled: widget.enabled,
       searchController: _searchController,
       barElevation: WidgetStatePropertyAll(0),
-      barLeading: const Icon(Icons.search),
+      barPadding: WidgetStatePropertyAll(EdgeInsets.fromLTRB(4, 0, 16, 0)),
+      barLeading: IconButton(
+        padding: .zero,
+        icon: const Icon(Icons.menu),
+        tooltip: "Open sidebar",
+        onPressed: () {
+          Scaffold.of(context).openDrawer();
+        },
+      ),
+      barTrailing: const [Icon(Icons.search)],
       barHintText: 'Search',
       suggestionsBuilder: (context, controller) async {
         if (controller.text.isEmpty) return [];
